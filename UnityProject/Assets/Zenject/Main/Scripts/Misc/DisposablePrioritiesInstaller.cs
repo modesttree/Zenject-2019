@@ -6,7 +6,7 @@ namespace ModestTree.Zenject
 {
     public class DisposablePrioritiesInstaller : Installer
     {
-        List<Type> _disposables;
+        readonly List<Type> _disposables;
 
         public DisposablePrioritiesInstaller(List<Type> disposables)
         {
@@ -19,7 +19,7 @@ namespace ModestTree.Zenject
 
             foreach (var disposableType in _disposables)
             {
-                BindPriority(_container, disposableType, priorityCount);
+                BindPriority(Container, disposableType, priorityCount);
                 priorityCount++;
             }
         }

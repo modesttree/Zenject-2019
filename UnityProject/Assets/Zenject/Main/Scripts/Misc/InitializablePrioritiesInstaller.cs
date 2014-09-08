@@ -6,7 +6,7 @@ namespace ModestTree.Zenject
 {
     public class InitializablePrioritiesInstaller : Installer
     {
-        List<Type> _initializables;
+        readonly List<Type> _initializables;
 
         public InitializablePrioritiesInstaller(
             List<Type> initializables)
@@ -20,7 +20,7 @@ namespace ModestTree.Zenject
 
             foreach (var initializableType in _initializables)
             {
-                BindPriority(_container, initializableType, priorityCount);
+                BindPriority(Container, initializableType, priorityCount);
                 priorityCount++;
             }
         }
