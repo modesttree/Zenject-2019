@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Misc;
 
 namespace ModestTree.Zenject
 {
@@ -8,18 +10,18 @@ namespace ModestTree.Zenject
         // Install basic functionality for most unity apps
         public override void InstallBindings()
         {
-            _container.Bind<UnityKernel>().ToSingleGameObject();
+            Container.Bind<UnityKernel>().ToSingleGameObject();
 
-            _container.Bind<UnityEventManager>().ToSingleGameObject();
-            _container.Bind<GameObjectInstantiator>().ToSingle();
+            Container.Bind<UnityEventManager>().ToSingleGameObject();
+            Container.Bind<GameObjectInstantiator>().ToSingle();
 
-            _container.Bind<StandardKernel>().ToSingle();
+            Container.Bind<StandardKernel>().ToSingle();
             // TODO: Do this instead:
             //_container.Bind<IKernel>().ToTransient<StandardKernel>();
 
-            _container.Bind<InitializableHandler>().ToSingle();
-            _container.Bind<DisposablesHandler>().ToSingle();
-            _container.Bind<ITickable>().ToLookup<UnityEventManager>();
+            Container.Bind<InitializableHandler>().ToSingle();
+            Container.Bind<DisposablesHandler>().ToSingle();
+            Container.Bind<ITickable>().ToLookup<UnityEventManager>();
         }
     }
 }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Exceptions;
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
@@ -66,9 +68,7 @@ namespace ModestTree.Zenject
 
         static IEnumerable<ZenjectResolveException> ValidateInstallers(CompositionRoot compRoot)
         {
-            var container = new DiContainer();
-
-            container.AllowNullBindings = true;
+            var container = new DiContainer {AllowNullBindings = true};
             container.Bind<CompositionRoot>().ToSingle(compRoot);
 
             foreach (var installer in compRoot.Installers)

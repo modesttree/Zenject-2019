@@ -1,12 +1,13 @@
-using System.Collections.Generic;
-using UnityEngine;
-using System.Linq;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Misc;
 
 namespace ModestTree.Zenject
 {
-    // Interface for kernel class
-    // Currently there is only one (UnityKernel) but there should be another
-    // eventually, once Zenject adds support for non-unity projects
+    /// <summary>
+    ///     Interface for kernel class.
+    ///     Currently there is only one (UnityKernel) but there should be another eventually, once Zenject adds support for
+    ///     non-unity projects.
+    /// </summary>
     public interface IKernel
     {
         void AddTask(ITickable task);
@@ -15,4 +16,3 @@ namespace ModestTree.Zenject
         void RemoveTask(ITickable task);
     }
 }
-

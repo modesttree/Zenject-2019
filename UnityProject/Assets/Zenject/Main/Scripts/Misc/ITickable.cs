@@ -1,8 +1,4 @@
-using System.Collections.Generic;
-using UnityEngine;
-using System.Linq;
-
-namespace ModestTree.Zenject
+namespace ModestTree.Zenject.Api.Misc
 {
     public interface ITickable
     {

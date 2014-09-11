@@ -1,4 +1,6 @@
 using System;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Exceptions;
 using UnityEngine;
 
 namespace ModestTree.Zenject

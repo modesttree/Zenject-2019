@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Security.Permissions;
-
-namespace ModestTree.Zenject
+namespace ModestTree.Zenject.Api.Misc
 {
     public interface IInitializable
     {

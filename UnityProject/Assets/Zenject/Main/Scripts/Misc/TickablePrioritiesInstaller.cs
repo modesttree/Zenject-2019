@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using ModestTree.Zenject;
+using ModestTree.Zenject.Api.Misc;
 
 namespace ModestTree.Zenject
 {
     public class TickablePrioritiesInstaller : Installer
     {
-        List<Type> _tickables;
+        readonly List<Type> _tickables;
 
         public TickablePrioritiesInstaller(
             List<Type> tickables)
@@ -20,7 +20,7 @@ namespace ModestTree.Zenject
 
             foreach (var tickableType in _tickables)
             {
-                BindPriority(_container, tickableType, priorityCount);
+                BindPriority(Container, tickableType, priorityCount);
                 priorityCount++;
             }
         }

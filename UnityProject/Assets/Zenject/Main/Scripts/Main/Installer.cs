@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Exceptions;
 
 namespace ModestTree.Zenject
 {
     public abstract class Installer : IInstaller
     {
-        protected DiContainer _container;
+        private DiContainer _container;
 
         [Inject]
         public DiContainer Container
         {
-            set
-            {
-                _container = value;
-            }
+            set { _container = value; }
+            protected get { return _container; }
         }
 
         public abstract void InstallBindings();
@@ -26,7 +25,9 @@ namespace ModestTree.Zenject
             return Enumerable.Empty<ZenjectResolveException>();
         }
 
-        // Helper method for ValidateSubGraphs
+        /// <summary>
+        ///     Helper method for ValidateSubGraphs
+        /// </summary>
         protected IEnumerable<ZenjectResolveException> Validate<T>(params Type[] extraTypes)
         {
             return _container.ValidateObjectGraph<T>(extraTypes);

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Exceptions;
 using UnityEditor;
 using UnityEngine;
 
