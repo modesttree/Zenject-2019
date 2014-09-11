@@ -66,9 +66,7 @@ namespace ModestTree.Zenject
 
         static IEnumerable<ZenjectResolveException> ValidateInstallers(CompositionRoot compRoot)
         {
-            var container = new DiContainer();
-
-            container.AllowNullBindings = true;
+            var container = new DiContainer {AllowNullBindings = true};
             container.Bind<CompositionRoot>().ToSingle(compRoot);
 
             foreach (var installer in compRoot.Installers)
