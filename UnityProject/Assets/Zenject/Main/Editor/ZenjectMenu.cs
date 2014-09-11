@@ -80,7 +80,7 @@ namespace ModestTree.Zenject
 
                 if (installer.enabled)
                 {
-                    installer.DiContainer = container;
+                    installer.Container = container;
                     container.Bind<IInstaller>().To(installer);
                 }
 

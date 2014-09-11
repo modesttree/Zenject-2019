@@ -1,17 +1,13 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
-using System.Linq;
 
 namespace ModestTree.Zenject
 {
-    // We extract the interface so that monobehaviours can be installers
+    /// <summary>
+    ///     We extract the interface so that monobehaviours can be installers
+    /// </summary>
     public interface IInstaller
     {
-        DiContainer DiContainer
-        {
-            set;
-        }
+        DiContainer Container { set; }
 
         void InstallBindings();
 
