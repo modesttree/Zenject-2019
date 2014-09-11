@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using ModestTree.Zenject.Api;
+using ModestTree.Zenject.Api.Exceptions;
 
 namespace ModestTree.Zenject
 {

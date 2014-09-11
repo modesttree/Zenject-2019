@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B71F2201-3382-46B3-A9C6-219A72954905}</ProjectGuid>
+    <ProjectGuid>{73A60B22-4135-4B72-9306-93263AAA9C2B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ModestTree.Zenject</RootNamespace>
-    <AssemblyName>Zenject-editor</AssemblyName>
+    <RootNamespace>ModestTree.Zenject.Api</RootNamespace>
+    <AssemblyName>Zenject.Api</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -41,30 +41,22 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEditor">
-      <HintPath>..\..\..\..\..\AssemblyBuild\Libraries\Unity\UnityEditor.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\AssemblyBuild\Libraries\Unity\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompositionRootEditor.cs" />
-    <Compile Include="ObjectGraphVisualizer.cs" />
-    <Compile Include="ZenEditorUtil.cs" />
-    <Compile Include="ZenjectMenu.cs" />
+    <Compile Include="Exceptions\ZenjectException.cs">
+      <SubType>
+      </SubType>
+    </Compile>
+    <Compile Include="Factories\IFactory.cs" />
+    <Compile Include="Factories\IFactoryTyped.cs" />
+    <Compile Include="Factories\IValidatable.cs" />
+    <Compile Include="Misc\IInitializable.cs" />
+    <Compile Include="Misc\ITickable.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Scripts\Zenject.Api.csproj">
-      <Project>{73a60b22-4135-4b72-9306-93263aaa9c2b}</Project>
-      <Name>Zenject.Api</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Scripts\Zenject.csproj">
-      <Project>{46f25a62-2e29-48cb-95f3-bdbcb0976ddc}</Project>
-      <Name>Zenject</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

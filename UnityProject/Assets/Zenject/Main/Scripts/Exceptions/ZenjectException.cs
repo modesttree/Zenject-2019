@@ -1,6 +1,6 @@
 using System;
 
-namespace ModestTree.Zenject
+namespace ModestTree.Zenject.Api.Exceptions
 {
     public class ZenjectException : Exception
     {

@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30324.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zenject", "..\UnityProject\Assets\Zenject\Main\Scripts\Zenject.csproj", "{46F25A62-2E29-48CB-95F3-BDBCB0976DDC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zenject-editor", "..\UnityProject\Assets\Zenject\Main\Editor\Zenject-editor.csproj", "{B71F2201-3382-46B3-A9C6-219A72954905}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zenject.Api", "..\UnityProject\Assets\Zenject\Main\Scripts\Zenject.Api.csproj", "{73A60B22-4135-4B72-9306-93263AAA9C2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{B71F2201-3382-46B3-A9C6-219A72954905}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B71F2201-3382-46B3-A9C6-219A72954905}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B71F2201-3382-46B3-A9C6-219A72954905}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73A60B22-4135-4B72-9306-93263AAA9C2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73A60B22-4135-4B72-9306-93263AAA9C2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73A60B22-4135-4B72-9306-93263AAA9C2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73A60B22-4135-4B72-9306-93263AAA9C2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
