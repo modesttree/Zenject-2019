@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using ModestTree.Zenject.Api.Misc;
 using NUnit.Framework;
 using UnityEngine;
 using TestAssert = NUnit.Framework.Assert;

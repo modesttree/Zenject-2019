@@ -4,6 +4,7 @@ using ModestTree.Zenject;
 using System.Linq;
 using ModestTree.Zenject.Api;
 using ModestTree.Zenject.Api.Exceptions;
+using ModestTree.Zenject.Api.Misc;
 
 namespace ModestTree.Zenject
 {

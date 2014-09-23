@@ -54,6 +54,7 @@
     <Compile Include="Factories\IFactoryTyped.cs" />
     <Compile Include="Factories\IValidatable.cs" />
     <Compile Include="Misc\IInitializable.cs" />
+    <Compile Include="Misc\InjectAttribute.cs" />
     <Compile Include="Misc\ITickable.cs" />
   </ItemGroup>
   <ItemGroup />

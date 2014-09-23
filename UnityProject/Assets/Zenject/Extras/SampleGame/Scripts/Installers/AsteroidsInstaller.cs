@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using ModestTree.Zenject.Api.Exceptions;
+using ModestTree.Zenject.Api.Misc;
 using UnityEngine;
 using System.Collections;
 using ModestTree.Zenject;
@@ -36,22 +38,22 @@ namespace ModestTree.Asteroids
         void InstallIncludes()
         {
             // This installer is needed for all unity projects (Yes, Zenject can support non-unity projects)
-            _container.Bind<IInstaller>().ToSingle<StandardUnityInstaller>();
+            Container.Bind<IInstaller>().ToSingle<StandardUnityInstaller>();
         }
 
         void InstallAsteroids()
         {
             // Root of our object graph
-            _container.Bind<IDependencyRoot>().ToSingle<DependencyRootStandard>();
+            Container.Bind<IDependencyRoot>().ToSingle<DependencyRootStandard>();
 
             // In this game there is only one camera so an enum isn't necessary
             // but used here to show how it would work if there were multiple
-            _container.Bind<Camera>().ToSingle(SceneSettings.MainCamera).As(Cameras.Main);
+            Container.Bind<Camera>().ToSingle(SceneSettings.MainCamera).As(Cameras.Main);
 
-            _container.Bind<LevelHelper>().ToSingle();
+            Container.Bind<LevelHelper>().ToSingle();
 
-            _container.Bind<ITickable>().ToSingle<AsteroidManager>();
-            _container.Bind<AsteroidManager>().ToSingle();
+            Container.Bind<ITickable>().ToSingle<AsteroidManager>();
+            Container.Bind<AsteroidManager>().ToSingle();
 
             // Here, we're defining a generic factory to create asteroid objects using the given prefab
             // There's several different ways of instantiating new game objects in zenject, this is
@@ -60,44 +62,44 @@ namespace ModestTree.Asteroids
             // This line is exactly the same as the following:
             //_container.Bind<IFactory<IAsteroid>>().To(
                 //new GameObjectFactory<IAsteroid, Asteroid>(_container, SceneSettings.Asteroid.Prefab));
-            _container.BindFactory<IAsteroid, Asteroid>(SceneSettings.Asteroid.Prefab);
+            Container.BindFactory<IAsteroid, Asteroid>(SceneSettings.Asteroid.Prefab);
 
-            _container.Bind<IInitializable>().ToSingle<GameController>();
-            _container.Bind<ITickable>().ToSingle<GameController>();
-            _container.Bind<GameController>().ToSingle();
+            Container.Bind<IInitializable>().ToSingle<GameController>();
+            Container.Bind<ITickable>().ToSingle<GameController>();
+            Container.Bind<GameController>().ToSingle();
 
-            _container.Bind<ShipStateFactory>().ToSingle();
+            Container.Bind<ShipStateFactory>().ToSingle();
 
             // Here's another way to create game objects dynamically, by using ToTransientFromPrefab
             // We prefer to use ITickable / IInitializable in favour of the Monobehaviour methods
             // so we just use a monobehaviour wrapper class here to pass in asset data
-            _container.Bind<ShipHooks>().ToTransientFromPrefab<ShipHooks>(SceneSettings.Ship.Prefab).WhenInjectedInto<Ship>();
+            Container.Bind<ShipHooks>().ToTransientFromPrefab<ShipHooks>(SceneSettings.Ship.Prefab).WhenInjectedInto<Ship>();
 
-            _container.Bind<Ship>().ToSingle();
-            _container.Bind<ITickable>().ToSingle<Ship>();
-            _container.Bind<IInitializable>().ToSingle<Ship>();
+            Container.Bind<Ship>().ToSingle();
+            Container.Bind<ITickable>().ToSingle<Ship>();
+            Container.Bind<IInitializable>().ToSingle<Ship>();
         }
 
         void InstallSettings()
         {
-            _container.Bind<ShipStateMoving.Settings>().ToSingle(SceneSettings.Ship.StateMoving);
-            _container.Bind<ShipStateDead.Settings>().ToSingle(SceneSettings.Ship.StateDead);
-            _container.Bind<ShipStateWaitingToStart.Settings>().ToSingle(SceneSettings.Ship.StateStarting);
+            Container.Bind<ShipStateMoving.Settings>().ToSingle(SceneSettings.Ship.StateMoving);
+            Container.Bind<ShipStateDead.Settings>().ToSingle(SceneSettings.Ship.StateDead);
+            Container.Bind<ShipStateWaitingToStart.Settings>().ToSingle(SceneSettings.Ship.StateStarting);
 
-            _container.Bind<AsteroidManager.Settings>().ToSingle(SceneSettings.Asteroid.Spawner);
-            _container.Bind<Asteroid.Settings>().ToSingle(SceneSettings.Asteroid.General);
+            Container.Bind<AsteroidManager.Settings>().ToSingle(SceneSettings.Asteroid.Spawner);
+            Container.Bind<Asteroid.Settings>().ToSingle(SceneSettings.Asteroid.General);
         }
 
         // We don't need to include these bindings but often its nice to have
         // control over initialization-order and update-order
         void InitPriorities()
         {
-            _container.Bind<IInstaller>().ToSingle<InitializablePrioritiesInstaller>();
-            _container.Bind<List<Type>>().To(Initializables)
+            Container.Bind<IInstaller>().ToSingle<InitializablePrioritiesInstaller>();
+            Container.Bind<List<Type>>().To(Initializables)
                 .WhenInjectedInto<InitializablePrioritiesInstaller>();
 
-            _container.Bind<IInstaller>().ToSingle<TickablePrioritiesInstaller>();
-            _container.Bind<List<Type>>().To(Tickables)
+            Container.Bind<IInstaller>().ToSingle<TickablePrioritiesInstaller>();
+            Container.Bind<List<Type>>().To(Tickables)
                 .WhenInjectedInto<TickablePrioritiesInstaller>();
         }
 

@@ -23,7 +23,7 @@ namespace ModestTree.Tests
             public static int Count;
             public override void InstallBindings()
             {
-                _container.Bind<IInstaller>().ToSingle<Test0>();
+                Container.Bind<IInstaller>().ToSingle<Test0>();
                 Count++;
             }
         }
@@ -33,7 +33,7 @@ namespace ModestTree.Tests
             public static int Count;
             public override void InstallBindings()
             {
-                _container.Bind<IInstaller>().ToSingle<Test0>();
+                Container.Bind<IInstaller>().ToSingle<Test0>();
                 Count++;
             }
         }

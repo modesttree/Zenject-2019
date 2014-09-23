@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ModestTree.Zenject;
+using ModestTree.Zenject.Api.Misc;
 using NUnit.Framework;
 using TestAssert=NUnit.Framework.Assert;
 using System.Linq;

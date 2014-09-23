@@ -86,7 +86,6 @@
     <Compile Include="Misc\IKernel.cs" />
     <Compile Include="Misc\InitializableHandler.cs" />
     <Compile Include="Misc\InitializablePrioritiesInstaller.cs" />
-    <Compile Include="Misc\InjectAttribute.cs" />
     <Compile Include="Misc\KernelUtil.cs" />
     <Compile Include="Misc\LookupInProgressAdder.cs" />
     <Compile Include="Misc\StandardKernel.cs" />

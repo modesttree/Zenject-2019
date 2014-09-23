@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ModestTree.Zenject;
+using ModestTree.Zenject.Api.Misc;
 using NUnit.Framework;
 using TestAssert=NUnit.Framework.Assert;
 
