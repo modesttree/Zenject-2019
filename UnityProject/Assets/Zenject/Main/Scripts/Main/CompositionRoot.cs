@@ -12,6 +12,7 @@ namespace ModestTree.Zenject
     // Then any children will get injected during resolve stage
     public sealed class CompositionRoot : MonoBehaviour
     {
+        public static MonoInstaller[] CodeInstallers;
         public static Action<DiContainer> ExtraBindingsLookup;
 
         DiContainer _container;
@@ -66,13 +67,22 @@ namespace ModestTree.Zenject
 
         void InstallSceneInstallers(DiContainer container)
         {
-            if (Installers.Where(x => x != null).IsEmpty())
+            MonoInstaller[] sceneInstallers=null;
+            if (CodeInstallers!=null)
+            {
+                if (Installers != null)
+                    sceneInstallers = CodeInstallers.Concat(CodeInstallers).ToArray();
+                else
+                    sceneInstallers = CodeInstallers;
+            }
+
+            if (sceneInstallers.Where(x => x != null).IsEmpty())
             {
                 Log.Warn("No installers found while initializing CompositionRoot");
                 return;
             }
 
-            foreach (var installer in Installers)
+            foreach (var installer in sceneInstallers)
             {
                 if (installer == null)
                 {
