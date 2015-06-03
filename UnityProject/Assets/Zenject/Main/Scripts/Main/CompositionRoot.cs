@@ -56,6 +56,9 @@ namespace Zenject
 
         public void Awake()
         {
+            if (Container != null)
+                return;
+
             _container = CreateContainer(
                 false, GlobalCompositionRoot.Instance.Container, _staticInstallers);
             _staticInstallers.Clear();
