@@ -16,11 +16,77 @@ namespace ModestTree.Util
 
     public static class UnityUtil
     {
+        static Func<KeyCode, bool> s_GetKey = Input.GetKey;
+        static Func<KeyCode, bool> s_GetKeyDown = Input.GetKeyDown;
+        static Func<string, float> s_GetAxis = Input.GetAxis;
+        static Func<int, bool> s_GetMouseButtonUp = Input.GetMouseButtonUp;
+        static Func<int, bool> s_GetMouseButtonDown = Input.GetMouseButtonDown;
+
+        public static Func<KeyCode, bool> GetKey
+        {
+            get
+            {
+                return s_GetKey;
+            }
+            set
+            {
+                s_GetKey = value ?? Input.GetKey;
+            }
+        }
+
+        public static Func<KeyCode, bool> GetKeyDown
+        {
+            get
+            {
+                return s_GetKeyDown;
+            }
+            set
+            {
+                s_GetKeyDown = value ?? Input.GetKeyDown;
+            }
+        }
+
+        public static Func<string, float> GetAxis
+        {
+            get
+            {
+                return s_GetAxis;
+            }
+            set
+            {
+                s_GetAxis = value ?? Input.GetAxis;
+            }
+        }
+
+        public static Func<int, bool> GetMouseButtonUp
+        {
+            get
+            {
+                return s_GetMouseButtonUp;
+            }
+            set
+            {
+                s_GetMouseButtonUp = value ?? Input.GetMouseButtonUp;
+            }
+        }
+
+        public static Func<int, bool> GetMouseButtonDown
+        {
+            get
+            {
+                return s_GetMouseButtonDown;
+            }
+            set
+            {
+                s_GetMouseButtonDown = value ?? Input.GetMouseButtonDown;
+            }
+        }
+
         public static bool IsAltKeyDown
         {
             get
             {
-                return Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+                return GetKey(KeyCode.LeftAlt) || GetKey(KeyCode.RightAlt);
             }
         }
 
@@ -28,7 +94,7 @@ namespace ModestTree.Util
         {
             get
             {
-                return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                return GetKey(KeyCode.LeftControl) || GetKey(KeyCode.RightControl);
             }
         }
 
@@ -36,7 +102,7 @@ namespace ModestTree.Util
         {
             get
             {
-                return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                return GetKey(KeyCode.LeftShift) || GetKey(KeyCode.RightShift);
             }
         }
 
@@ -44,7 +110,7 @@ namespace ModestTree.Util
         {
             get
             {
-                return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
+                return GetKeyDown(KeyCode.LeftShift) || GetKeyDown(KeyCode.RightShift);
             }
         }
 
@@ -52,13 +118,13 @@ namespace ModestTree.Util
         {
             get
             {
-                return Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt);
+                return GetKeyDown(KeyCode.LeftAlt) || GetKeyDown(KeyCode.RightAlt);
             }
         }
 
         public static MouseWheelScrollDirections CheckMouseScrollWheel()
         {
-            var value = Input.GetAxis("Mouse ScrollWheel");
+            var value = GetAxis("Mouse ScrollWheel");
 
             if (Mathf.Approximately(value, 0.0f))
             {

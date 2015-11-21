@@ -61,34 +61,34 @@ namespace Zenject
             int buttonRight = 1;
             int buttonMiddle = 2;
 
-            if (Input.GetMouseButtonDown(buttonLeft))
+            if (UnityUtil.GetMouseButtonDown(buttonLeft))
             {
                 LeftMouseButtonDown();
                 MouseButtonDown(0);
             }
-            else if (Input.GetMouseButtonUp(buttonLeft))
+            else if (UnityUtil.GetMouseButtonUp(buttonLeft))
             {
                 LeftMouseButtonUp();
                 MouseButtonUp(0);
             }
 
-            if (Input.GetMouseButtonDown(buttonRight))
+            if (UnityUtil.GetMouseButtonDown(buttonRight))
             {
                 RightMouseButtonDown();
                 MouseButtonDown(1);
             }
-            else if (Input.GetMouseButtonUp(buttonRight))
+            else if (UnityUtil.GetMouseButtonUp(buttonRight))
             {
                 RightMouseButtonUp();
                 MouseButtonUp(1);
             }
 
-            if (Input.GetMouseButtonDown(buttonMiddle))
+            if (UnityUtil.GetMouseButtonDown(buttonMiddle))
             {
                 MiddleMouseButtonDown();
                 MouseButtonDown(2);
             }
-            else if (Input.GetMouseButtonUp(buttonMiddle))
+            else if (UnityUtil.GetMouseButtonUp(buttonMiddle))
             {
                 MiddleMouseButtonUp();
                 MouseButtonUp(2);
