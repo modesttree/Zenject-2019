@@ -35,8 +35,8 @@ __Quick Start__:  If you are already familiar with dependency injection and are 
         * <a href="#bind-methods">Bind Methods</a>
         * <a href="#list-bindings">List Bindings</a>
         * <a href="#optional-binding">Optional Binding</a>
-        * <a href="#conditional-bindings">Conditional Bindings</a>
         * <a href="#identifiers">Identifiers</a>
+        * <a href="#conditional-bindings">Conditional Bindings</a>
         * <a href="#itickable">ITickable</a>
         * <a href="#iinitializable-and-postinject">IInitializable and PostInject</a>
         * <a href="#implementing-idisposable">Implementing IDisposable</a>
@@ -640,7 +640,7 @@ class MyCustomFactory : IFactory<IFoo>
 }
 ```
 
-The `ToSingleFactory` binding can be useful when you want to define a singleton, but it has complex construction logic that you want to define yourself.  You could use `ToSingleMethod`, but this can get ugly if your construction logic itself has its own dependencies that it needs.  Using `ToSingleFactory` for this case is nice because any dependencies that you require for construction can be simply added to the factory constructor
+The `ToSingleFactory` binding can be useful when you want to define a singleton, but it has complex construction logic that you want to define yourself.  You could use `ToSingleMethod`, but this can get ugly if your construction logic itself has its own dependencies that it needs.  Using `ToSingleFactory` for this case it is nice because any dependencies that you require for construction can be simply added to the factory constructor
 
 18 - **Untyped Bindings**
 
@@ -691,7 +691,7 @@ public class Bar
 }
 ```
 
-Also worth noting is that if you try and declare a single dependency of IFoo (like Bar below) and there are multiple bindings for it, then Zenject will throw an exception, since Zenject doesn't know which instance of IFoo to use.  Also, if the empty list is valid, then you should mark your List constructor parameter (or [Inject] field) as optional (see <a href="#optional-binding">here</a> for details).
+Also worth noting is that if you try and declare a single dependency of IFoo (like Bar below) and there are multiple bindings for it, then Zenject will throw an exception, since Zenject doesn't know which instance of IFoo to use.
 
 ```csharp
 public class Bar
@@ -701,6 +701,8 @@ public class Bar
     }
 }
 ```
+
+Also, if the empty list is valid, then you should mark your List constructor parameter (or [Inject] field) as optional (see <a href="#optional-binding">here</a> for details).
 
 ## <a id="optional-binding"></a>Optional Binding
 
@@ -796,7 +798,7 @@ public class Bar2
 
 In this example, the Bar1 class will be given an instance of Foo1, and the Bar2 class will use the default version of IFoo which is bound to Foo2.
 
-Note also that you can add a name constructor arguments as well, for example:
+Note also that you can add a name to constructor arguments as well, for example:
 
 ```csharp
 public class Bar
@@ -993,7 +995,7 @@ Note that this example may or may not be a good idea (for example, the file will
 
 ## <a id="installers"></a>Installers
 
-Often, there is some collection of related bindings for each sub-system and so it makes sense to group those bindings into a re-usable object.  In Zenject this re-usable object is called an Installer.  You can define a new installer as follows:
+Often, there is some collections of related bindings for each sub-system and so it makes sense to group those bindings into a re-usable object.  In Zenject this re-usable object is called an Installer.  You can define a new installer as follows:
 
 ```csharp
 public class FooInstaller : MonoInstaller
@@ -1822,7 +1824,7 @@ For example, let's say we want to add some special keyboard shortcuts to our mai
 * Add an empty GameObject and name it 'CompositionRoot'
 * Add a 'SceneDecoratorCompositionRoot' MonoBehaviour to it
 * Type in the scene you want to 'decorate' in the 'Scene Name' field of SceneDecoratorCompositionRoot
-* Create a new C# script with the following contents, then add your the MonoBehaviour to your scene and drag it to the Installers property of SceneDecoratorCompositionRoot
+* Create a new C# script with the following contents, then add this MonoBehaviour to your scene as a gameObject, then drag it to the Installers property of SceneDecoratorCompositionRoot
 
 ```csharp
 public class ExampleDecoratorInstaller : DecoratorInstaller
