@@ -42,7 +42,7 @@ __Quick Start__:  If you are already familiar with dependency injection and are 
         * <a href="#implementing-idisposable">Implementing IDisposable</a>
         * <a href="#installers">Installers</a>
     * <a href="#zenject-order-of-operations">Zenject Order Of Operations</a>
-    * <a href="#di-rules--guidelines--recommendations">Rules / Guidelines / Recommendations / Gotchas / Miscellaneous Tips and Tricks</a>
+    * <a href="#di-guidelines--recommendations">Guidelines / Recommendations / Gotchas / Miscellaneous Tips and Tricks</a>
     * Advanced Features
         * <a href="#global-bindings">Global Bindings</a>
         * <a href="#update--initialization-order">Update Order And Initialization Order</a>
@@ -1092,7 +1092,7 @@ A Zenject driven application is executed by the following steps:
 1. App is exited
 1. Dispose() is called on all objects mapped to IDisposable (see <a href="#implementing-idisposable">here</a> for details)
 
-## <a id="di-rules--guidelines--recommendations"></a>DI Guidelines / Recommendations / Gotchas / Tips and Tricks
+## <a id="di-guidelines--recommendations"></a>DI Guidelines / Recommendations / Gotchas / Tips and Tricks
 
 * **Do not use GameObject.Instantiate if you want your objects to have their dependencies injected**
     * If you want to create a prefab yourself, you can use either IInstantiator interface (which is automatically included in every container) or the DiContainer directly, which will automatically fill in any fields that are marked with the [Inject] attribute.  The IInstantiator interface and DiContainer contain various methods to create from prefabs or create from empty game objects, etc.  
