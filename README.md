@@ -1099,12 +1099,12 @@ A Zenject driven application is executed by the following steps:
     **In other words:  If you want your dynamically created game object to have its fields injected, do not use GameObject.Instantiate and use DiContainer.InstantiatePrefab or GameObjectFactory instead**
     * For more information on GameObjectFactory see <a href="#game-object-factories">this section</a>
 
-* **The container should *only* be referenced in the composition root "layer"**.
+* **The container should *only* be referenced in the composition root "layer"**
     * Note that factories are part of this layer and the container can be referenced there (which is necessary to create objects at runtime).  For example, see ShipStateFactory in the sample project.  See <a href="#creating-objects-dynamically">here</a> for more details on this.
 
 * **Do not use IInitializable, ITickable and IDisposable for dynamically created objects**
     * Objects that are of type IInitializable are only initialized once, at startup.  If you create an object through a factory, and it derives from IInitializable, the Initialize() method will not be called.  You should use [PostInject] in this case.
-    * The same applies to ITickable and IDisposable.  Deriving from these will do nothing unless they are part of the original object graph created at startup
+    * The same applies to ITickable and IDisposable.  Deriving from these will do nothing unless they are part of the original object graph created at startup.
     * If you have dynamically created objects that have an Update() method, it is usually best to call Update() on those manually, and often there is a higher level manager-like class in which it makes to do this from.  If however you prefer to use ITickable for dynamically objects you can declare a dependency to TickableManager and add/remove it explicitly as well.
 
 * **Using multiple constructors**
