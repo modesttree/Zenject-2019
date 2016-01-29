@@ -64,7 +64,7 @@ namespace Zenject
 
         public BindingConditionSetter ToInstance<TConcrete>(TConcrete instance)
         {
-            return ToInstance(typeof(TConcrete), instance);
+            return ToInstance(instance != null ? instance.GetType() : typeof(TConcrete), instance);
         }
 
         public BindingConditionSetter ToSingleInstance<TConcrete>(TConcrete instance)
