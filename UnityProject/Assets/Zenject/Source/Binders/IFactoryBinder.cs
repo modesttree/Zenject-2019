@@ -55,6 +55,14 @@ namespace Zenject
                 .ToMethod(c => new FactoryNested<TContract, TConcrete>(c.Container.Resolve<IFactory<TConcrete>>()));
         }
 
+		public BindingConditionSetter ToFacadeFactory<TConcrete, TFactory>(Action<DiContainer> facadeInstaller)
+			where TFactory : IFactory<TConcrete>
+			where TConcrete : TContract
+		{
+			return _container.Bind<IFactory<TContract>>(_identifier)
+				.ToMethod(c => new FactoryNested<TContract, TConcrete>(c.Container.Instantiate<TFactory>(facadeInstaller)));
+		}
+
         public BindingConditionSetter ToCustomFactory<TFactory>()
             where TFactory : IFactory<TContract>
         {
