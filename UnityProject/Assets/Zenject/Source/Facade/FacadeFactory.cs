@@ -5,7 +5,7 @@ using ModestTree.Util;
 
 namespace Zenject
 {
-    public abstract class FacadeFactory<TFacade> : IValidatable
+    public abstract class FacadeFactory<TFacade> : IFactory<TFacade>, IValidatable
         where TFacade : IFacade
     {
         [Inject]
