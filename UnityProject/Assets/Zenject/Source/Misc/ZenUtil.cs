@@ -145,12 +145,9 @@ namespace Zenject
 
             if (scene.IsValid())
             {
-                foreach (var go in UnityUtil.GetRootGameObjects())
+                foreach (var go in scene.GetRootGameObjects())
                 {
-                    if (go.scene == scene)
-                    {
-                        parentContainer.InjectGameObject(go);
-                    }
+                    parentContainer.InjectGameObject(go);
                 }
 
                 if (callback != null)
