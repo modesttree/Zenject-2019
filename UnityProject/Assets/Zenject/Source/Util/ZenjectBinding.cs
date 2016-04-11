@@ -15,19 +15,19 @@ namespace Zenject
         [SerializeField]
         Component _component = null;
 
-        [Tooltip("This value will determine what container the component gets added to.  If set to 'Scene', it will be as if the given component was bound inside an installer on the SceneCompositionRoot.  If set to 'Local', it will be as if it is bound inside an installer on whatever CompositionRoot it is in.  In most cases that will be the SceneCompositionRoot, but if it's inside a FacadeCompositionRoot it will be bound into that instead.  Typically you would only need to use the 'Scene' value when you want to bind something to the SceneCompositionRoot that is inside a FacadeCompositionRoot (eg. typically this would be the MonoFacade derived class)")]
+        [Tooltip("This value will determine what container the component gets added to.  Note that this value is optional.  If unset, the component will be bound on the most 'local' composition root.  In most cases this will be the SceneCompositionRoot, unless this component is underneath a FacadeCompositionRoot, in which case it will bind to that instead by default.  You can also override this default by providing the CompositionRoot directly.  This can be useful if you want to bind something that is inside a FacadeCompositionRoot to the SceneCompositionRoot container.")]
         [SerializeField]
-        ContainerTypes _containerType = ContainerTypes.Local;
+        CompositionRoot _compositionRoot;
 
         [Tooltip("This value is used to determine how to bind this component.  When set to 'Self' is equivalent to calling Container.ToInstance inside an installer. When set to 'AllInterfaces' this is equivalent to calling 'Container.BindAllInterfaces<MyMonoBehaviour>().ToInstance', and similarly for AllInterfacesAndSelf")]
         [SerializeField]
         BindTypes _bindType = BindTypes.Self;
 
-        public ContainerTypes ContainerType
+        public CompositionRoot CompositionRoot
         {
             get
             {
-                return _containerType;
+                return _compositionRoot;
             }
         }
 
@@ -52,12 +52,6 @@ namespace Zenject
             Self,
             AllInterfaces,
             AllInterfacesAndSelf,
-        }
-
-        public enum ContainerTypes
-        {
-            Scene,
-            Local,
         }
     }
 }

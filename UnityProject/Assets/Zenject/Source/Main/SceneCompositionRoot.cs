@@ -103,7 +103,7 @@ namespace Zenject
 
             container.Bind<CompositionRoot>().ToInstance(this);
 
-            InstallSceneBindingsInternal(container);
+            InstallSceneBindings(container);
 
             if (BeforeInstallHooks != null)
             {
@@ -121,26 +121,6 @@ namespace Zenject
                 AfterInstallHooks(container);
                 // Reset extra bindings for next time we change scenes
                 AfterInstallHooks = null;
-            }
-        }
-
-        void InstallSceneBindingsInternal(DiContainer container)
-        {
-            InstallSceneBindings(container);
-
-            foreach (var autoBinding in GameObject.FindObjectsOfType<ZenjectBinding>())
-            {
-                if (autoBinding == null)
-                {
-                    continue;
-                }
-
-                if (autoBinding.ContainerType != ZenjectBinding.ContainerTypes.Scene)
-                {
-                    continue;
-                }
-
-                InstallAutoBinding(container, autoBinding);
             }
         }
 

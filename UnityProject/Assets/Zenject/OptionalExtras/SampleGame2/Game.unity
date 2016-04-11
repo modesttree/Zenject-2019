@@ -320,7 +320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _component: {fileID: 414693291}
-  _containerType: 1
+  _compositionRoot: {fileID: 0}
   _bindType: 0
 --- !u!82 &414693294
 AudioSource:
@@ -869,7 +869,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _component: {fileID: 1303116751}
-  _containerType: 0
+  _compositionRoot: {fileID: 534447710}
   _bindType: 0
 --- !u!1 &1911468624
 GameObject:

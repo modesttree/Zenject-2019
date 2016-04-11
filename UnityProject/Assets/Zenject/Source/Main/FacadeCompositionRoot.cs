@@ -129,6 +129,8 @@ namespace Zenject
 
             container.Bind<IDependencyRoot>().ToInstance(_facade);
 
+            InstallSceneBindings(container);
+
             var extraArgsMap = new Dictionary<Type, List<TypeValuePair>>();
 
             if (installerExtraArgs != null)

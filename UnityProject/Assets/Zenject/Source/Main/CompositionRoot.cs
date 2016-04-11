@@ -158,12 +158,23 @@ namespace Zenject
                     continue;
                 }
 
-                if (autoBinding.ContainerType != ZenjectBinding.ContainerTypes.Local)
+                if (autoBinding.CompositionRoot == null)
+                {
+                    InstallAutoBinding(container, autoBinding);
+                }
+            }
+
+            foreach (var autoBinding in GameObject.FindObjectsOfType<ZenjectBinding>())
+            {
+                if (autoBinding == null)
                 {
                     continue;
                 }
 
-                InstallAutoBinding(container, autoBinding);
+                if (autoBinding.CompositionRoot == this)
+                {
+                    InstallAutoBinding(container, autoBinding);
+                }
             }
         }
 
