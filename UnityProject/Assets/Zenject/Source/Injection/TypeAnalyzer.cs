@@ -86,7 +86,11 @@ namespace Zenject
                 paramInfo.ParameterType,
                 parentType,
                 null,
+#if USE_EXPRESSIONS
+                isOptionalWithADefaultValue ? paramInfo.DefaultValue : paramInfo.ParameterType.IsValueType ? paramInfo.ParameterType.NewValueType() : null,
+#else
                 isOptionalWithADefaultValue ? paramInfo.DefaultValue : null,
+#endif
                 sourceType);
         }
 

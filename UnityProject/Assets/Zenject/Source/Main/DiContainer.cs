@@ -856,7 +856,11 @@ namespace Zenject
                 using (ProfileBlock.Start("{0}.{0}()", concreteType))
 #endif
                 {
+#if USE_EXPRESSIONS
+                    newObj = typeInfo.InjectConstructor.New(paramValues.ToArray());
+#else
                     newObj = typeInfo.InjectConstructor.Invoke(paramValues.ToArray());
+#endif
                 }
             }
             catch (Exception e)

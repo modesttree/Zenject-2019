@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Zenject;
 
 namespace ModestTree
 {
@@ -32,7 +33,11 @@ namespace ModestTree
         {
             if (type.IsValueType)
             {
+#if USE_EXPRESSIONS
+                return type.NewValueType();
+#else
                 return Activator.CreateInstance(type);
+#endif
             }
 
             return null;

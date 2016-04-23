@@ -10,7 +10,7 @@ using ModestTree;
 using Zenject.Internal;
 using UnityEditor;
 
-#if UNITY_5_3
+#if UNITY_5_3_OR_NEWER
 using UnityEditor.SceneManagement;
 #endif
 
@@ -20,7 +20,7 @@ namespace Zenject
     {
         static string GetActiveScene()
         {
-#if UNITY_5_3
+#if UNITY_5_3_OR_NEWER
             return EditorSceneManager.GetActiveScene().path;
 #else
             return EditorApplication.currentScene;
@@ -180,7 +180,7 @@ namespace Zenject
             }
             finally
             {
-#if UNITY_5_3
+#if UNITY_5_3_OR_NEWER
                 EditorSceneManager.CloseScene(EditorSceneManager.GetSceneByPath(scenePath), true);
 #else
                 foreach (var newObject in newRootObjects)
