@@ -24,8 +24,8 @@ namespace Zenject.Tests
             Bar1.Value = null;
 
             Container.DeclareCommand<DoSomethingCommand1>();
-            Container.ImplementCommand<string, DoSomethingCommand1>()
-                .By<Bar1>(x => x.Execute).AsSingle();
+            Container.HandleCommand<string, DoSomethingCommand1>()
+                .With<Bar1>(x => x.Execute).AsSingle();
 
             Initialize();
 
@@ -45,8 +45,8 @@ namespace Zenject.Tests
             Bar2.Value2 = 0;
 
             Container.DeclareCommand<DoSomethingCommand2>();
-            Container.ImplementCommand<string, int, DoSomethingCommand2>()
-                .By<Bar2>(x => x.Execute).AsSingle();
+            Container.HandleCommand<string, int, DoSomethingCommand2>()
+                .With<Bar2>(x => x.Execute).AsSingle();
 
             Initialize();
 
@@ -69,8 +69,8 @@ namespace Zenject.Tests
             Bar3.Value3 = 0.0f;
 
             Container.DeclareCommand<DoSomethingCommand3>();
-            Container.ImplementCommand<string, int, float, DoSomethingCommand3>()
-                .By<Bar3>(x => x.Execute).AsSingle();
+            Container.HandleCommand<string, int, float, DoSomethingCommand3>()
+                .With<Bar3>(x => x.Execute).AsSingle();
 
             Initialize();
 
@@ -96,8 +96,8 @@ namespace Zenject.Tests
             Bar4.Value4 = '0';
 
             Container.DeclareCommand<DoSomethingCommand4>();
-            Container.ImplementCommand<string, int, float, char, DoSomethingCommand4>()
-                .By<Bar4>(x => x.Execute).AsSingle();
+            Container.HandleCommand<string, int, float, char, DoSomethingCommand4>()
+                .With<Bar4>(x => x.Execute).AsSingle();
 
             Initialize();
 

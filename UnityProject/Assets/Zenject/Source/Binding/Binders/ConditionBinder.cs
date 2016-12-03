@@ -19,26 +19,22 @@ namespace Zenject
 
         public CopyIntoSubContainersBinder WhenInjectedIntoInstance(object instance)
         {
-            BindInfo.Condition = r => ReferenceEquals(r.ObjectInstance, instance);
-            return this;
+            return When(r => ReferenceEquals(r.ObjectInstance, instance));
         }
 
         public CopyIntoSubContainersBinder WhenInjectedInto(params Type[] targets)
         {
-            BindInfo.Condition = r => targets.Where(x => r.ObjectType != null && r.ObjectType.DerivesFromOrEqual(x)).Any();
-            return this;
+            return When(r => targets.Where(x => r.ObjectType != null && r.ObjectType.DerivesFromOrEqual(x)).Any());
         }
 
         public CopyIntoSubContainersBinder WhenInjectedInto<T>()
         {
-            BindInfo.Condition = r => r.ObjectType != null && r.ObjectType.DerivesFromOrEqual(typeof(T));
-            return this;
+            return When(r => r.ObjectType != null && r.ObjectType.DerivesFromOrEqual(typeof(T)));
         }
 
         public CopyIntoSubContainersBinder WhenNotInjectedInto<T>()
         {
-            BindInfo.Condition = r => r.ObjectType == null || !r.ObjectType.DerivesFromOrEqual(typeof(T));
-            return this;
+            return When(r => r.ObjectType == null || !r.ObjectType.DerivesFromOrEqual(typeof(T)));
         }
     }
 }

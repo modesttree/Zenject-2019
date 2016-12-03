@@ -1815,10 +1815,14 @@ namespace Zenject
         // Note that this can include open generic types as well such as List<>
         public ConcreteIdBinderGeneric<TContract> Bind<TContract>()
         {
+            return Bind<TContract>(
+                new BindInfo(typeof(TContract)));
+        }
+
+        public ConcreteIdBinderGeneric<TContract> Bind<TContract>(BindInfo bindInfo)
+        {
             Assert.That(!typeof(TContract).DerivesFrom<IDynamicFactory>(),
                 "You should not use Container.Bind for factory classes.  Use Container.BindFactory instead.");
-
-            var bindInfo = new BindInfo(typeof(TContract));
 
             return new ConcreteIdBinderGeneric<TContract>(
                 bindInfo, StartBinding());

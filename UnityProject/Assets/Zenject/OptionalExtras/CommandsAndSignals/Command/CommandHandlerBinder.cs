@@ -18,9 +18,9 @@ namespace Zenject
             _finalizerWrapper = finalizerWrapper;
         }
 
-        public FromBinder By<THandler>(Func<THandler, Action> methodGetter)
+        public FromBinder With<THandler>(Func<THandler, Action> methodGetter)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             var lookupId = Guid.NewGuid();
@@ -30,12 +30,15 @@ namespace Zenject
             _container.Bind(typeof(IDisposable)).To<InstanceMethodCommandHandler<THandler>>().AsCached()
                 .WithArguments(_commandType, methodGetter, lazyLookup);
 
+            // By returning FromBinder, it means they can add conditions, and also
+            // do things like CopyIntoAllSubContainers, and NonLazy, all of which
+            // make no sense for command handlers, but whatever
             return _container.Bind<THandler>().WithId(lookupId).To<THandler>();
         }
 
-        public void ByMethod(Action method)
+        public void WithMethod(Action method)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             _container.Bind(typeof(IDisposable)).To<StaticMethodCommandHandler>().AsCached()
@@ -57,9 +60,9 @@ namespace Zenject
             _finalizerWrapper = finalizerWrapper;
         }
 
-        public FromBinder By<THandler>(Func<THandler, Action<TParam1>> methodGetter)
+        public FromBinder With<THandler>(Func<THandler, Action<TParam1>> methodGetter)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             var lookupId = Guid.NewGuid();
@@ -69,12 +72,15 @@ namespace Zenject
             _container.Bind(typeof(IDisposable)).To<InstanceMethodCommandHandler<TParam1, THandler>>().AsCached()
                 .WithArguments(_commandType, methodGetter, lazyLookup).NonLazy();
 
+            // By returning FromBinder, it means they can add conditions, and also
+            // do things like CopyIntoAllSubContainers, and NonLazy, all of which
+            // make no sense for command handlers, but whatever
             return _container.Bind<THandler>().WithId(lookupId).To<THandler>();
         }
 
-        public void ByMethod(Action<TParam1> method)
+        public void WithMethod(Action<TParam1> method)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             _container.Bind(typeof(IDisposable)).To<StaticMethodCommandHandler<TParam1>>().AsCached()
@@ -96,9 +102,9 @@ namespace Zenject
             _finalizerWrapper = finalizerWrapper;
         }
 
-        public FromBinder By<THandler>(Func<THandler, Action<TParam1, TParam2>> methodGetter)
+        public FromBinder With<THandler>(Func<THandler, Action<TParam1, TParam2>> methodGetter)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             var lookupId = Guid.NewGuid();
@@ -108,12 +114,15 @@ namespace Zenject
             _container.Bind(typeof(IDisposable)).To<InstanceMethodCommandHandler<TParam1, TParam2, THandler>>().AsCached()
                 .WithArguments(_commandType, methodGetter, lazyLookup).NonLazy();
 
+            // By returning FromBinder, it means they can add conditions, and also
+            // do things like CopyIntoAllSubContainers, and NonLazy, all of which
+            // make no sense for command handlers, but whatever
             return _container.Bind<THandler>().WithId(lookupId).To<THandler>();
         }
 
-        public void ByMethod(Action<TParam1, TParam2> method)
+        public void WithMethod(Action<TParam1, TParam2> method)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             _container.Bind(typeof(IDisposable)).To<StaticMethodCommandHandler<TParam1, TParam2>>().AsCached()
@@ -135,9 +144,9 @@ namespace Zenject
             _finalizerWrapper = finalizerWrapper;
         }
 
-        public FromBinder By<THandler>(Func<THandler, Action<TParam1, TParam2, TParam3>> methodGetter)
+        public FromBinder With<THandler>(Func<THandler, Action<TParam1, TParam2, TParam3>> methodGetter)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             var lookupId = Guid.NewGuid();
@@ -147,12 +156,15 @@ namespace Zenject
             _container.Bind(typeof(IDisposable)).To<InstanceMethodCommandHandler<TParam1, TParam2, TParam3, THandler>>().AsCached()
                 .WithArguments(_commandType, methodGetter, lazyLookup).NonLazy();
 
+            // By returning FromBinder, it means they can add conditions, and also
+            // do things like CopyIntoAllSubContainers, and NonLazy, all of which
+            // make no sense for command handlers, but whatever
             return _container.Bind<THandler>().WithId(lookupId).To<THandler>();
         }
 
-        public void ByMethod(Action<TParam1, TParam2, TParam3> method)
+        public void WithMethod(Action<TParam1, TParam2, TParam3> method)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             _container.Bind(typeof(IDisposable)).To<StaticMethodCommandHandler<TParam1, TParam2, TParam3>>().AsCached()
@@ -174,9 +186,9 @@ namespace Zenject
             _finalizerWrapper = finalizerWrapper;
         }
 
-        public FromBinder By<THandler>(Func<THandler, Action<TParam1, TParam2, TParam3, TParam4>> methodGetter)
+        public FromBinder With<THandler>(Func<THandler, Action<TParam1, TParam2, TParam3, TParam4>> methodGetter)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             var lookupId = Guid.NewGuid();
@@ -186,12 +198,15 @@ namespace Zenject
             _container.Bind(typeof(IDisposable)).To<InstanceMethodCommandHandler<TParam1, TParam2, TParam3, TParam4, THandler>>().AsCached()
                 .WithArguments(_commandType, methodGetter, lazyLookup).NonLazy();
 
+            // By returning FromBinder, it means they can add conditions, and also
+            // do things like CopyIntoAllSubContainers, and NonLazy, all of which
+            // make no sense for command handlers, but whatever
             return _container.Bind<THandler>().WithId(lookupId).To<THandler>();
         }
 
-        public void ByMethod(Action<TParam1, TParam2, TParam3, TParam4> method)
+        public void WithMethod(Action<TParam1, TParam2, TParam3, TParam4> method)
         {
-            // This is just to ensure they don't stop at ImplementCommand
+            // This is just to ensure they don't stop at HandleCommand
             _finalizerWrapper.SubFinalizer = new NullBindingFinalizer();
 
             _container.Bind(typeof(IDisposable)).To<StaticMethodCommandHandler<TParam1, TParam2, TParam3, TParam4>>().AsCached()

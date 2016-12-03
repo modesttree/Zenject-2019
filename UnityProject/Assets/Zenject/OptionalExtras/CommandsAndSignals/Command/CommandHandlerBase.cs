@@ -20,14 +20,14 @@ namespace Zenject
 
         public void Dispose()
         {
-            _manager.Unregister(_commandType);
+            _manager.Unregister(_commandType, this);
         }
 
         protected void ValidateParameter<T>(object value)
         {
             if (value == null)
             {
-                Assert.That(!typeof(T).IsValueType);
+                Assert.That(!typeof(T).IsValueType());
             }
             else
             {

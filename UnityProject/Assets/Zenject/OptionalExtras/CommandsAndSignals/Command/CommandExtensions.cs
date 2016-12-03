@@ -6,13 +6,16 @@ namespace Zenject
 {
     public static class CommandExtensions
     {
-        public static ConditionBinder DeclareCommand<T>(this DiContainer container)
+        public static CommandBinder DeclareCommand<T>(this DiContainer container)
             where T : ICommand
         {
-            return container.Bind<T>().AsSingle();
+            var info = new BindInfo(typeof(T));
+            var commandSettings = new CommandSettings();
+            container.Bind<T>(info).AsSingle().WithArguments(commandSettings);
+            return new CommandBinder(info, commandSettings);
         }
 
-        public static CommandHandlerBinder ImplementCommand<TCommand>(this DiContainer container)
+        public static CommandHandlerBinder HandleCommand<TCommand>(this DiContainer container)
             where TCommand : Command
         {
             var binder = container.StartBinding();
@@ -20,7 +23,7 @@ namespace Zenject
                 container, typeof(TCommand), binder);
         }
 
-        public static CommandHandlerBinder<TParam1> ImplementCommand<TParam1, TCommand>(this DiContainer container)
+        public static CommandHandlerBinder<TParam1> HandleCommand<TParam1, TCommand>(this DiContainer container)
             where TCommand : Command<TParam1>
         {
             var binder = container.StartBinding();
@@ -28,7 +31,7 @@ namespace Zenject
                 container, typeof(TCommand), binder);
         }
 
-        public static CommandHandlerBinder<TParam1, TParam2> ImplementCommand<TParam1, TParam2, TCommand>(this DiContainer container)
+        public static CommandHandlerBinder<TParam1, TParam2> HandleCommand<TParam1, TParam2, TCommand>(this DiContainer container)
             where TCommand : Command<TParam1, TParam2>
         {
             var binder = container.StartBinding();
@@ -36,7 +39,7 @@ namespace Zenject
                 container, typeof(TCommand), binder);
         }
 
-        public static CommandHandlerBinder<TParam1, TParam2, TParam3> ImplementCommand<TParam1, TParam2, TParam3, TCommand>(this DiContainer container)
+        public static CommandHandlerBinder<TParam1, TParam2, TParam3> HandleCommand<TParam1, TParam2, TParam3, TCommand>(this DiContainer container)
             where TCommand : Command<TParam1, TParam2, TParam3>
         {
             var binder = container.StartBinding();
@@ -44,7 +47,7 @@ namespace Zenject
                 container, typeof(TCommand), binder);
         }
 
-        public static CommandHandlerBinder<TParam1, TParam2, TParam3, TParam4> ImplementCommand<TParam1, TParam2, TParam3, TParam4, TCommand>(this DiContainer container)
+        public static CommandHandlerBinder<TParam1, TParam2, TParam3, TParam4> HandleCommand<TParam1, TParam2, TParam3, TParam4, TCommand>(this DiContainer container)
             where TCommand : Command<TParam1, TParam2, TParam3, TParam4>
         {
             var binder = container.StartBinding();

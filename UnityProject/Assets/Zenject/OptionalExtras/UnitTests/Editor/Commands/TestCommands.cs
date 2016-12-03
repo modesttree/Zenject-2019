@@ -27,8 +27,8 @@ namespace Zenject.Tests
             Container.Bind<Bar>().AsSingle();
 
             Container.DeclareCommand<DoSomethingCommand>();
-            Container.ImplementCommand<DoSomethingCommand>()
-                .By<Bar>(x => x.Execute).AsSingle();
+            Container.HandleCommand<DoSomethingCommand>()
+                .With<Bar>(x => x.Execute).AsSingle();
 
             Initialize();
 
@@ -53,8 +53,8 @@ namespace Zenject.Tests
             Container.Bind<Bar>().AsCached();
 
             Container.DeclareCommand<DoSomethingCommand>();
-            Container.ImplementCommand<DoSomethingCommand>()
-                .By<Bar>(x => x.Execute).AsCached();
+            Container.HandleCommand<DoSomethingCommand>()
+                .With<Bar>(x => x.Execute).AsCached();
 
             Initialize();
 
@@ -74,9 +74,34 @@ namespace Zenject.Tests
         }
 
         [Test]
-        public void TestToNothingHandler()
+        public void TestNoHandlerDefault()
         {
             Container.DeclareCommand<DoSomethingCommand>();
+
+            Initialize();
+
+            var cmd = Container.Resolve<DoSomethingCommand>();
+            cmd.Execute();
+        }
+
+        [Test]
+        public void TestNoHandlerRequiredFailure()
+        {
+            Container.DeclareCommand<DoSomethingCommand>().RequireHandler();
+
+            Initialize();
+
+            var cmd = Container.Resolve<DoSomethingCommand>();
+
+            Assert.Throws(() => cmd.Execute());
+        }
+
+        [Test]
+        public void TestNoHandlerRequiredSuccess()
+        {
+            Container.DeclareCommand<DoSomethingCommand>().RequireHandler();
+            Container.HandleCommand<DoSomethingCommand>()
+                .With<Bar>(x => x.Execute).AsCached();
 
             Initialize();
 
@@ -90,8 +115,8 @@ namespace Zenject.Tests
             bool wasCalled = false;
 
             Container.DeclareCommand<DoSomethingCommand>();
-            Container.ImplementCommand<DoSomethingCommand>()
-                .ByMethod(() => wasCalled = true);
+            Container.HandleCommand<DoSomethingCommand>()
+                .WithMethod(() => wasCalled = true);
 
             Initialize();
 
@@ -100,6 +125,53 @@ namespace Zenject.Tests
             Assert.That(!wasCalled);
             cmd.Execute();
             Assert.That(wasCalled);
+        }
+
+        [Test]
+        public void TestMultipleHandlers()
+        {
+            bool wasCalled1 = false;
+            bool wasCalled2 = false;
+
+            Container.DeclareCommand<DoSomethingCommand>();
+            Container.HandleCommand<DoSomethingCommand>()
+                .WithMethod(() => wasCalled1 = true);
+            Container.HandleCommand<DoSomethingCommand>()
+                .WithMethod(() => wasCalled2 = true);
+
+            Initialize();
+
+            var cmd = Container.Resolve<DoSomethingCommand>();
+
+            Assert.That(!wasCalled1);
+            Assert.That(!wasCalled2);
+            cmd.Execute();
+            Assert.That(wasCalled1);
+            Assert.That(wasCalled2);
+        }
+
+        public void TestMultipleHandlersError()
+        {
+            bool wasCalled1 = false;
+            bool wasCalled2 = false;
+
+            Container.DeclareCommand<DoSomethingCommand>()
+                .RequireSingleHandler();
+
+            Container.HandleCommand<DoSomethingCommand>()
+                .WithMethod(() => wasCalled1 = true);
+            Container.HandleCommand<DoSomethingCommand>()
+                .WithMethod(() => wasCalled2 = true);
+
+            Initialize();
+
+            var cmd = Container.Resolve<DoSomethingCommand>();
+
+            Assert.That(!wasCalled1);
+            Assert.That(!wasCalled2);
+            cmd.Execute();
+            Assert.That(wasCalled1);
+            Assert.That(wasCalled2);
         }
 
         public class DoSomethingCommand : Command

@@ -8,14 +8,27 @@ namespace Zenject
     {
     }
 
+    public class CommandSettings
+    {
+        public int MinHandlers = 0;
+        public int MaxHandlers = int.MaxValue;
+    }
+
     public abstract class CommandBase : ICommand
     {
         CommandManager _manager;
 
         [Inject]
-        void Construct(CommandManager manager)
+        void Construct(CommandManager manager, CommandSettings settings)
         {
             _manager = manager;
+            Settings = settings;
+        }
+
+        protected CommandSettings Settings
+        {
+            get;
+            private set;
         }
 
         protected CommandManager Manager
@@ -36,7 +49,7 @@ namespace Zenject
     {
         public void Execute()
         {
-            Manager.Trigger(this.GetType(), new object[0]);
+            Manager.Trigger(this.GetType(), Settings, new object[0]);
         }
     }
 
@@ -44,7 +57,7 @@ namespace Zenject
     {
         public void Execute(TParam1 param1)
         {
-            Manager.Trigger(this.GetType(), new object[] { param1 });
+            Manager.Trigger(this.GetType(), Settings, new object[] { param1 });
         }
     }
 
@@ -52,7 +65,7 @@ namespace Zenject
     {
         public void Execute(TParam1 param1, TParam2 param2)
         {
-            Manager.Trigger(this.GetType(), new object[] { param1, param2 });
+            Manager.Trigger(this.GetType(), Settings, new object[] { param1, param2 });
         }
     }
 
@@ -60,7 +73,7 @@ namespace Zenject
     {
         public void Execute(TParam1 param1, TParam2 param2, TParam3 param3)
         {
-            Manager.Trigger(this.GetType(), new object[] { param1, param2, param3 });
+            Manager.Trigger(this.GetType(), Settings, new object[] { param1, param2, param3 });
         }
     }
 
@@ -68,7 +81,7 @@ namespace Zenject
     {
         public void Execute(TParam1 param1, TParam2 param2, TParam3 param3, TParam4 param4)
         {
-            Manager.Trigger(this.GetType(), new object[] { param1, param2, param3, param4 });
+            Manager.Trigger(this.GetType(), Settings, new object[] { param1, param2, param3, param4 });
         }
     }
 }
