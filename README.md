@@ -2124,6 +2124,7 @@ Something else to note is that the rate at which the ITickable.Tick method gets 
     * [NOVA Black Holes](https://itunes.apple.com/us/app/nova-black-holes/id1114574985?mt=8) (iOS)
     * [Farm Away!](http://www.farmawaygame.com/) (iOS and Android)
     * [Build Away!](http://www.buildawaygame.com/) (iOS and Android)
+    * Stick Soccer 2 ([iOS](https://itunes.apple.com/gb/app/stick-soccer-2/id1104214157?mt=8) and [Android](https://play.google.com/store/apps/details?id=com.sticksports.soccer2&hl=en_GB))
 
     Libraries
 
