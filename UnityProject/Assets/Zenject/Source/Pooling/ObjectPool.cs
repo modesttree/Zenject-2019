@@ -45,7 +45,7 @@ namespace Zenject
             {
                 PoolSize++;
 
-                item = new T();
+                item = m_createItemAction.Invoke();
             }
             else
             {
