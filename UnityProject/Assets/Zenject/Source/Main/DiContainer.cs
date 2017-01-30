@@ -426,7 +426,7 @@ namespace Zenject
 
             if (matches.Any())
             {
-                var instances = matches.SelectMany(x => SafeGetInstances(x.ProviderInfo.Provider, context)).ToArray();
+                var instances = matches.SelectMany(x => SafeGetInstances(x, context)).ToArray();
 
                 if (IsValidating)
                 {
@@ -499,7 +499,7 @@ namespace Zenject
         {
             Assert.IsNotNull(context);
 
-            IProvider provider;
+            ProviderPair provider;
 
             FlushBindings();
 
@@ -521,7 +521,7 @@ namespace Zenject
             }
 
             Assert.IsNotNull(provider);
-            return provider.GetInstanceType(context);
+            return provider.ProviderInfo.Provider.GetInstanceType(context);
         }
 
         public List<Type> ResolveTypeAll(Type type)
@@ -549,8 +549,8 @@ namespace Zenject
 
         // Try looking up a single provider for a given context
         // Note that this method should not throw zenject exceptions
-        internal ProviderLookupResult TryGetUniqueProvider(
-            InjectContext context, out IProvider provider)
+        ProviderLookupResult TryGetUniqueProvider(
+            InjectContext context, out ProviderPair providerPair)
         {
             Assert.IsNotNull(context);
 
@@ -559,7 +559,7 @@ namespace Zenject
 
             if (providers.IsEmpty())
             {
-                provider = null;
+                providerPair = null;
                 return ProviderLookupResult.None;
             }
 
@@ -579,15 +579,15 @@ namespace Zenject
                 if (sortedProviders.Count == 1)
                 {
                     // We have one match that is the closest
-                    provider = sortedProviders[0].Pair.ProviderInfo.Provider;
+                    providerPair = sortedProviders[0].Pair;
                 }
                 else
                 {
                     // Try choosing the one with a condition before giving up and throwing an exception
                     // This is nice because it allows us to bind a default and then override with conditions
-                    provider = sortedProviders.Where(x => x.Pair.ProviderInfo.Condition != null).Select(x => x.Pair.ProviderInfo.Provider).OnlyOrDefault();
+                    providerPair = sortedProviders.Where(x => x.Pair.ProviderInfo.Condition != null).Select(x => x.Pair).OnlyOrDefault();
 
-                    if (provider == null)
+                    if (providerPair == null)
                     {
                         return ProviderLookupResult.Multiple;
                     }
@@ -595,10 +595,10 @@ namespace Zenject
             }
             else
             {
-                provider = providers.Single().ProviderInfo.Provider;
+                providerPair = providers.Single();
             }
 
-            Assert.IsNotNull(provider);
+            Assert.IsNotNull(providerPair);
             return ProviderLookupResult.Success;
         }
 
@@ -606,12 +606,12 @@ namespace Zenject
         {
             Assert.IsNotNull(context);
 
-            IProvider provider;
+            ProviderPair providerPair;
 
             FlushBindings();
             CheckForInstallWarning(context);
 
-            var result = TryGetUniqueProvider(context, out provider);
+            var result = TryGetUniqueProvider(context, out providerPair);
 
             Assert.That(result != ProviderLookupResult.Multiple,
                 "Found multiple matches when only one was expected for type '{0}'{1}. \nObject graph:\n {2}",
@@ -644,9 +644,9 @@ namespace Zenject
             }
 
             Assert.That(result == ProviderLookupResult.Success);
-            Assert.IsNotNull(provider);
+            Assert.IsNotNull(providerPair);
 
-            var instances = SafeGetInstances(provider, context);
+            var instances = SafeGetInstances(providerPair, context);
 
             Assert.That(!instances.IsEmpty(), "Provider returned zero instances when one was expected!");
             Assert.That(instances.Count() == 1, "Provider returned multiple instances when one was expected!");
@@ -654,27 +654,39 @@ namespace Zenject
             return instances.First();
         }
 
-        IEnumerable<object> SafeGetInstances(IProvider provider, InjectContext context)
+        IEnumerable<object> SafeGetInstances(ProviderPair providerPair, InjectContext context)
         {
             Assert.IsNotNull(context);
+
+            var provider = providerPair.ProviderInfo.Provider;
 
             if (ChecksForCircularDependencies)
             {
                 var lookupId = new LookupId(provider, context.GetBindingId());
 
+                // Use the container associated with the provider to address some rare cases
+                // which would otherwise result in an infinite loop.  Like this:
+                // Container.Bind<ICharacter>().FromPrefab(Prefab).AsTransient()
+                // With the prefab being a GameObjectContext containing a script that has a
+                // ICharacter dependency.  In this case, we would otherwise use the _resolvesInProgress
+                // associated with the GameObjectContext container, which will allow the recursive
+                // lookup, which will trigger another GameObjectContext and container (since it is
+                // transient) and the process continues indefinitely
+
+                var providerContainer = providerPair.Container;
                 // Allow one before giving up so that you can do circular dependencies via postinject or fields
-                Assert.That(_resolvesInProgress.Where(x => x.Equals(lookupId)).Count() <= 1,
+                Assert.That(providerContainer._resolvesInProgress.Where(x => x.Equals(lookupId)).Count() <= 1,
                     "Circular dependency detected! \nObject graph:\n {0}", context.GetObjectGraphString());
 
-                _resolvesInProgress.Push(lookupId);
+                providerContainer._resolvesInProgress.Push(lookupId);
                 try
                 {
                     return provider.GetAllInstances(context);
                 }
                 finally
                 {
-                    Assert.That(_resolvesInProgress.Peek().Equals(lookupId));
-                    _resolvesInProgress.Pop();
+                    Assert.That(providerContainer._resolvesInProgress.Peek().Equals(lookupId));
+                    providerContainer._resolvesInProgress.Pop();
                 }
             }
             else
@@ -1816,10 +1828,14 @@ namespace Zenject
         // Note that this can include open generic types as well such as List<>
         public ConcreteIdBinderGeneric<TContract> Bind<TContract>()
         {
+            return Bind<TContract>(
+                new BindInfo(typeof(TContract)));
+        }
+
+        public ConcreteIdBinderGeneric<TContract> Bind<TContract>(BindInfo bindInfo)
+        {
             Assert.That(!typeof(TContract).DerivesFrom<IDynamicFactory>(),
                 "You should not use Container.Bind for factory classes.  Use Container.BindFactory instead.");
-
-            var bindInfo = new BindInfo(typeof(TContract));
 
             return new ConcreteIdBinderGeneric<TContract>(
                 bindInfo, StartBinding());

@@ -36,6 +36,21 @@ namespace Zenject
         }
 
         // Don't use this
+        public static int ValidateAllActiveScenes()
+        {
+            var activeScenePaths = UnityEditor.EditorBuildSettings.scenes.Where(x => x.enabled)
+                .Select(x => x.path).ToList();
+
+            foreach (var scenePath in activeScenePaths)
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                ValidateCurrentSceneSetup();
+            }
+
+            return activeScenePaths.Count;
+        }
+
+        // Don't use this
         public static void RunCurrentSceneSetup()
         {
             Assert.That(!ProjectContext.HasInstance);
