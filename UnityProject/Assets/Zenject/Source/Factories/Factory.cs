@@ -28,7 +28,7 @@ namespace Zenject
             return CreateInternal(
                 new List<TypeValuePair>()
                 {
-                    InjectUtil.CreateTypePair(param),
+                    new TypeValuePair(typeof(TParam1), param),
                 });
         }
 
@@ -48,8 +48,8 @@ namespace Zenject
             return CreateInternal(
                 new List<TypeValuePair>()
                 {
-                    InjectUtil.CreateTypePair(param1),
-                    InjectUtil.CreateTypePair(param2),
+                    new TypeValuePair(typeof(TParam1), param1),
+                    new TypeValuePair(typeof(TParam2), param2),
                 });
         }
 
@@ -73,9 +73,9 @@ namespace Zenject
             return CreateInternal(
                 new List<TypeValuePair>()
                 {
-                    InjectUtil.CreateTypePair(param1),
-                    InjectUtil.CreateTypePair(param2),
-                    InjectUtil.CreateTypePair(param3),
+                    new TypeValuePair(typeof(TParam1), param1),
+                    new TypeValuePair(typeof(TParam2), param2),
+                    new TypeValuePair(typeof(TParam3), param3),
                 });
         }
 
@@ -100,10 +100,10 @@ namespace Zenject
             return CreateInternal(
                 new List<TypeValuePair>()
                 {
-                    InjectUtil.CreateTypePair(param1),
-                    InjectUtil.CreateTypePair(param2),
-                    InjectUtil.CreateTypePair(param3),
-                    InjectUtil.CreateTypePair(param4),
+                    new TypeValuePair(typeof(TParam1), param1),
+                    new TypeValuePair(typeof(TParam2), param2),
+                    new TypeValuePair(typeof(TParam3), param3),
+                    new TypeValuePair(typeof(TParam4), param4),
                 });
         }
 
@@ -129,11 +129,11 @@ namespace Zenject
             return CreateInternal(
                 new List<TypeValuePair>()
                 {
-                    InjectUtil.CreateTypePair(param1),
-                    InjectUtil.CreateTypePair(param2),
-                    InjectUtil.CreateTypePair(param3),
-                    InjectUtil.CreateTypePair(param4),
-                    InjectUtil.CreateTypePair(param5),
+                    new TypeValuePair(typeof(TParam1), param1),
+                    new TypeValuePair(typeof(TParam2), param2),
+                    new TypeValuePair(typeof(TParam3), param3),
+                    new TypeValuePair(typeof(TParam4), param4),
+                    new TypeValuePair(typeof(TParam5), param5),
                 });
         }
 
