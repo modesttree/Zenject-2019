@@ -52,25 +52,35 @@ namespace Zenject
 
 #if !NOT_UNITY3D
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(bool excludeSelf = false)
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(Func<TContract, bool> predicate, bool includeInactive = false)
+		{
+			return FromComponentInChildren(false, predicate, includeInactive);
+		}
 
-            return FromMethodMultiple((ctx) =>
-                {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
 
-                    var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInChildren<TContract>()
-                                                                 .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(bool excludeSelf = false,
+																		   Func<TContract, bool> predicate = null, bool includeInactive = false)
+		{
+			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
-                    if (excludeSelf) res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
+			return FromMethodMultiple((ctx) => {
+				Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
+				Assert.IsNotNull(ctx.ObjectInstance);
 
-                    return res;
-                });
-        }
+				var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInChildren<TContract>(includeInactive)
+															 .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInParents(bool excludeSelf = false)
+				if (excludeSelf)
+					res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
+
+				if (predicate != null) res = res.Where(predicate);
+
+				return res;
+			});
+		}
+
+
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInParents(bool excludeSelf = false)
         {
             BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
@@ -102,17 +112,20 @@ namespace Zenject
                 });
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInHierarchy()
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInHierarchy(Func<TContract, bool> predicate = null, bool includeInactive = false)
+		{
+			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
-            return FromMethodMultiple((ctx) =>
-                {
-                    return ctx.Container.Resolve<Context>().GetRootGameObjects()
-                        .SelectMany(x => x.GetComponentsInChildren<TContract>())
-                        .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-                });
-        }
+			return FromMethodMultiple((ctx) => {
+				var res = ctx.Container.Resolve<Context>().GetRootGameObjects()
+					.SelectMany(x => x.GetComponentsInChildren<TContract>(includeInactive))
+					.Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+
+				if (predicate != null) res = res.Where(predicate);
+
+				return res;
+			});
+		}
 #endif
-    }
+	}
 }

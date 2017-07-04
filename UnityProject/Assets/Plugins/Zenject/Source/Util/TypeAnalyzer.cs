@@ -1,12 +1,13 @@
+using JetBrains.Annotations;
+using ModestTree;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
-using ModestTree;
+using System.Reflection;
 
 namespace Zenject
 {
-    public static class TypeAnalyzer
+	public static class TypeAnalyzer
     {
         static Dictionary<Type, ZenjectTypeInfo> _typeInfo = new Dictionary<Type, ZenjectTypeInfo>();
 
@@ -156,6 +157,33 @@ namespace Zenject
             }
         }
 
+		private static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags)
+		{
+			if (t == null)
+				return Enumerable.Empty<FieldInfo>();
+
+			return t.GetFields(flags).Concat(GetAllFields(t.BaseType, flags)).Distinct();
+		}
+
+		[NotNull]
+	    private static Action<object, object> GetOnlyPropertySetter( [NotNull] Type parentType,
+	                                                                 [NotNull] string propertyName) {
+		    if (parentType == null) throw new ArgumentNullException(nameof(parentType));
+		    if (string.IsNullOrEmpty(propertyName)) throw new ArgumentException("Value cannot be null or empty.", nameof(propertyName));
+
+			var allFields = GetAllFields(parentType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+
+		    var writeableField = allFields.SingleOrDefault(f => f.Name == string.Format("<{0}>k__BackingField", propertyName));
+
+		    if (writeableField == null) {
+			    throw new ZenjectException(string.Format(
+			                                             "Can't find backing field for get only property {0} on {1}.\r\n{2}",
+			                                             propertyName, parentType.FullName,string.Join(";", allFields.Select(f => f.Name).ToArray())));
+		    }
+
+			return ( injectable, value ) => writeableField.SetValue(injectable, value);
+		}
+
         static InjectableInfo CreateForMember(MemberInfo memInfo, Type parentType)
         {
             var injectAttributes = memInfo.AllAttributes<InjectAttributeBase>().ToList();
@@ -189,8 +217,12 @@ namespace Zenject
             {
                 Assert.That(memInfo is PropertyInfo);
                 var propInfo = (PropertyInfo)memInfo;
-                setter = ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
-                memberType = propInfo.PropertyType;
+				memberType = propInfo.PropertyType;
+
+				if (propInfo.CanWrite)
+		            setter = (( object injectable, object value ) => propInfo.SetValue(injectable, value, null));
+	            else
+		            setter = GetOnlyPropertySetter(parentType, propInfo.Name);
             }
 
             return new InjectableInfo(
