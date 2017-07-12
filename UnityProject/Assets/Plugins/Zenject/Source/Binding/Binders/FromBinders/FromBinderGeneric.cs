@@ -57,23 +57,43 @@ namespace Zenject
 			return FromComponentInChildren(false, predicate, includeInactive);
 		}
 
+		private static MonoBehaviour GetMonoBehaviourContext(InjectContext ctx) {
+			var monoBehaviourContext = ctx.ObjectInstance as MonoBehaviour;
 
-		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(bool excludeSelf = false,
-																		   Func<TContract, bool> predicate = null, bool includeInactive = false)
+			if (monoBehaviourContext != null) return monoBehaviourContext;
+
+			//If the context is not MonoBehaviour look in the parent context
+			if (monoBehaviourContext == null && ctx.Container.InheritMonoBehaviourBindings) {
+				foreach (var ancestorContext in ctx.ParentContextsAndSelf) {
+					if (ancestorContext.ObjectInstance != null && ancestorContext.ObjectType.DerivesFromOrEqual<MonoBehaviour>()) {
+						return (MonoBehaviour) ancestorContext.ObjectInstance;
+					}
+				}
+			}
+
+			return null;
+		}
+
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren( bool excludeSelf = false,
+	                                                                       Func<TContract, bool> predicate = null,
+	                                                                       bool includeInactive = false )
 		{
 			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
 			return FromMethodMultiple((ctx) => {
-				Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-				Assert.IsNotNull(ctx.ObjectInstance);
+				var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+				Assert.IsNotNull(monoBehaviourContext);
 
-				var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInChildren<TContract>(includeInactive)
-															 .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+				var res = monoBehaviourContext.GetComponentsInChildren<TContract>(includeInactive)
+					 .Where(x => !ReferenceEquals(x, monoBehaviourContext));
 
-				if (excludeSelf)
-					res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
+				if (excludeSelf) {
+					res = res.Where(x => (x as Component).gameObject != monoBehaviourContext.gameObject);
+				}
 
-				if (predicate != null) res = res.Where(predicate);
+				if (predicate != null) {
+					res = res.Where(predicate);
+				}
 
 				return res;
 			});
@@ -86,10 +106,10 @@ namespace Zenject
 
             return FromMethodMultiple((ctx) =>
                 {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
+					var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+					Assert.IsNotNull(monoBehaviourContext);
 
-                    var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInParent<TContract>()
+                    var res = monoBehaviourContext.GetComponentsInParent<TContract>()
                         .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
 
                     if (excludeSelf) res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
@@ -98,16 +118,22 @@ namespace Zenject
                 });
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentSibling()
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+        public ScopeArgConditionCopyNonLazyBinder FromComponentSibling() {
+	        foreach (var type in AllParentTypes) {
+				Assert.That(type == typeof(GameObject) || type.DerivesFrom(typeof(Component)) || type.IsInterface(),
+					"Invalid type given during bind command.  Expected type '{0}' to either derive from UnityEngine.Component, be a GameObject, or be an interface", type);
+			}
 
-            return FromMethodMultiple((ctx) =>
+			return FromMethodMultiple((ctx) =>
                 {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
+					var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+					Assert.IsNotNull(monoBehaviourContext);
 
-                    return ((MonoBehaviour)ctx.ObjectInstance).GetComponents<TContract>()
+	                if (typeof(TContract) == typeof(GameObject))
+		                return monoBehaviourContext.GetComponents<Transform>().Select(t => (TContract)Convert.ChangeType(t.gameObject, typeof(TContract)))
+									.Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+
+					return monoBehaviourContext.GetComponents<TContract>()
                         .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
                 });
         }

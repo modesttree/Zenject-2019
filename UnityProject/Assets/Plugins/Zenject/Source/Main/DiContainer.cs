@@ -29,6 +29,8 @@ namespace Zenject
     {
         public const string DependencyRootIdentifier = "DependencyRoot";
 
+		public bool InheritMonoBehaviourBindings { get; set; }
+
         readonly Dictionary<BindingId, List<ProviderInfo>> _providers = new Dictionary<BindingId, List<ProviderInfo>>();
         readonly DiContainer _parentContainer;
         readonly Stack<LookupId> _resolvesInProgress = new Stack<LookupId>();
