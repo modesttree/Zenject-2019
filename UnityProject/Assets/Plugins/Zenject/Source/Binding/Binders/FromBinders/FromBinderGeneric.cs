@@ -57,23 +57,6 @@ namespace Zenject
 			return FromComponentInChildren(false, predicate, includeInactive);
 		}
 
-		private static MonoBehaviour GetMonoBehaviourContext(InjectContext ctx) {
-			var monoBehaviourContext = ctx.ObjectInstance as MonoBehaviour;
-
-			if (monoBehaviourContext != null) return monoBehaviourContext;
-
-			//If the context is not MonoBehaviour look in the parent context
-			if (monoBehaviourContext == null && ctx.Container.InheritMonoBehaviourBindings) {
-				foreach (var ancestorContext in ctx.ParentContextsAndSelf) {
-					if (ancestorContext.ObjectInstance != null && ancestorContext.ObjectType.DerivesFromOrEqual<MonoBehaviour>()) {
-						return (MonoBehaviour) ancestorContext.ObjectInstance;
-					}
-				}
-			}
-
-			return null;
-		}
-
 		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren( bool excludeSelf = false,
 	                                                                       Func<TContract, bool> predicate = null,
 	                                                                       bool includeInactive = false )
@@ -81,7 +64,7 @@ namespace Zenject
 			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
 			return FromMethodMultiple((ctx) => {
-				var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+				var monoBehaviourContext = ctx.ToMonoBehaviourContext();
 				Assert.IsNotNull(monoBehaviourContext);
 
 				var res = monoBehaviourContext.GetComponentsInChildren<TContract>(includeInactive)
@@ -106,7 +89,7 @@ namespace Zenject
 
             return FromMethodMultiple((ctx) =>
                 {
-					var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+					var monoBehaviourContext = ctx.ToMonoBehaviourContext();
 					Assert.IsNotNull(monoBehaviourContext);
 
                     var res = monoBehaviourContext.GetComponentsInParent<TContract>()
@@ -126,7 +109,7 @@ namespace Zenject
 
 			return FromMethodMultiple((ctx) =>
                 {
-					var monoBehaviourContext = GetMonoBehaviourContext(ctx);
+					var monoBehaviourContext = ctx.ToMonoBehaviourContext();
 					Assert.IsNotNull(monoBehaviourContext);
 
 	                if (typeof(TContract) == typeof(GameObject))

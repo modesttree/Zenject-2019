@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ModestTree;
+using UnityEngine;
 
 namespace Zenject
 {
@@ -247,5 +248,23 @@ namespace Zenject
 
             return result.ToString();
         }
-    }
+
+		public MonoBehaviour ToMonoBehaviourContext()
+		{
+			var monoBehaviourContext = this.ObjectInstance as MonoBehaviour;
+
+			if (monoBehaviourContext != null) return monoBehaviourContext;
+
+			//If the context is not MonoBehaviour look in the parent context
+			if (monoBehaviourContext == null && this.Container.InheritMonoBehaviourBindings) {
+				foreach (var ancestorContext in this.ParentContextsAndSelf) {
+					if (ancestorContext.ObjectInstance != null && ancestorContext.ObjectType.DerivesFromOrEqual<MonoBehaviour>()) {
+						return (MonoBehaviour)ancestorContext.ObjectInstance;
+					}
+				}
+			}
+
+			return null;
+		}
+	}
 }
