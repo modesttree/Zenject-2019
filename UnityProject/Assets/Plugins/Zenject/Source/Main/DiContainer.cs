@@ -872,14 +872,19 @@ namespace Zenject
         {
             Type injectableType;
 
-            if (injectable is ValidationMarker)
+			if (injectable is ValidationMarker)
             {
                 injectableType = ((ValidationMarker)injectable).MarkedType;
             }
-            else
-            {
-                injectableType = injectable.GetType();
-            }
+            else {
+				var injectableAsType = injectable as Type;
+				if (injectableAsType != null) {
+		            injectableType = injectableAsType;
+		            injectable = null;
+	            } else {
+		            injectableType = injectable.GetType();
+	            }
+			}
 
             InjectExplicit(
                 injectable,
@@ -895,12 +900,10 @@ namespace Zenject
         public void InjectExplicit(
             object injectable, Type injectableType, InjectArgs args)
         {
-            Assert.That(injectable != null);
-
             // Installers are the only things that we instantiate/inject on during validation
             bool isDryRun = IsValidating && !CanCreateOrInjectDuringValidation(injectableType);
 
-            if (!isDryRun)
+			if (injectable != null && !isDryRun)
             {
                 Assert.IsEqual(injectable.GetType(), injectableType);
             }
@@ -930,6 +933,8 @@ namespace Zenject
                         }
                         else
                         {
+							if (injectable == null)
+								Debug.Log($"DiContainer.InjectExplicit(): injectableType='{injectableType}', injectInfo='{injectInfo.MemberName}'");
                             injectInfo.Setter(injectable, value);
                         }
                     }
@@ -1563,13 +1568,12 @@ namespace Zenject
         //    Any fields marked [Inject] will be set using the bindings on the container
         //    Any methods marked with a [Inject] will be called
         //    Any constructor parameters will be filled in with values from the container
-        public void Inject(object injectable)
-        {
-            Inject(injectable, new object[0]);
+        public void Inject(object injectable) {
+	        Inject(injectable, new object[0]);
         }
 
-        // Same as Inject(injectable) except allows adding extra values to be injected
-        public void Inject(object injectable, IEnumerable<object> extraArgs)
+		// Same as Inject(injectable) except allows adding extra values to be injected
+		public void Inject(object injectable, IEnumerable<object> extraArgs)
         {
             InjectExplicit(
                 injectable, InjectUtil.CreateArgList(extraArgs));

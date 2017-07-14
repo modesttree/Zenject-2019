@@ -50,18 +50,18 @@ namespace ModestTree
 #endif
         }
 
-        public static MethodInfo[] DeclaredInstanceMethods(this Type type)
+        public static MethodInfo[] DeclaredMethods(this Type type)
         {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetRuntimeMethods()
                 .Where(x => x.DeclaringType == type).ToArray();
 #else
             return type.GetMethods(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
 #endif
         }
 
-        public static PropertyInfo[] DeclaredInstanceProperties(this Type type)
+        public static PropertyInfo[] DeclaredProperties(this Type type)
         {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             // There doesn't appear to be an IsStatic member on PropertyInfo
@@ -69,18 +69,18 @@ namespace ModestTree
                 .Where(x => x.DeclaringType == type).ToArray();
 #else
             return type.GetProperties(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
 #endif
         }
 
-        public static FieldInfo[] DeclaredInstanceFields(this Type type)
+        public static FieldInfo[] DeclaredFields(this Type type)
         {
 #if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
             return type.GetRuntimeFields()
                 .Where(x => x.DeclaringType == type && !x.IsStatic).ToArray();
 #else
             return type.GetFields(
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
 #endif
         }
 
@@ -143,6 +143,19 @@ namespace ModestTree
             return type.IsAbstract;
 #endif
         }
+		
+		public static bool IsSealed(this Type type)
+        {
+#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
+            return type.GetTypeInfo().IsSealed;
+#else
+			return type.IsSealed;
+#endif
+        }
+		
+		public static bool IsStatic(this Type type) {
+			return type.IsAbstract() && type.IsSealed();
+		}
 
         public static MethodInfo Method(this Delegate del)
         {
@@ -238,51 +251,51 @@ namespace ModestTree
             return type.IsGenericType() && type == type.GetGenericTypeDefinition();
         }
 
-        // Returns all instance fields, including private and public and also those in base classes
-        public static IEnumerable<FieldInfo> GetAllInstanceFields(this Type type)
+		// Returns all instance and static properties fields, including private and public and also those in base classes
+		public static IEnumerable<FieldInfo> GetAllFields(this Type type)
         {
-            foreach (var fieldInfo in type.DeclaredInstanceFields())
+            foreach (var fieldInfo in type.DeclaredFields())
             {
                 yield return fieldInfo;
             }
 
             if (type.BaseType() != null && type.BaseType() != typeof(object))
             {
-                foreach (var fieldInfo in type.BaseType().GetAllInstanceFields())
+                foreach (var fieldInfo in type.BaseType().GetAllFields())
                 {
                     yield return fieldInfo;
                 }
             }
         }
 
-        // Returns all instance properties, including private and public and also those in base classes
-        public static IEnumerable<PropertyInfo> GetAllInstanceProperties(this Type type)
+        // Returns all instance and static properties, including private and public and also those in base classes
+        public static IEnumerable<PropertyInfo> GetAllProperties(this Type type)
         {
-            foreach (var propInfo in type.DeclaredInstanceProperties())
+            foreach (var propInfo in type.DeclaredProperties())
             {
                 yield return propInfo;
             }
 
-            if (type.BaseType() != null && type.BaseType() != typeof(object))
+			if (type.BaseType() != null && type.BaseType() != typeof(object))
             {
-                foreach (var propInfo in type.BaseType().GetAllInstanceProperties())
+                foreach (var propInfo in type.BaseType().GetAllProperties())
                 {
                     yield return propInfo;
                 }
             }
         }
 
-        // Returns all instance methods, including private and public and also those in base classes
-        public static IEnumerable<MethodInfo> GetAllInstanceMethods(this Type type)
+		// Returns all instance and static properties methods, including private and public and also those in base classes
+		public static IEnumerable<MethodInfo> GetAllMethods(this Type type)
         {
-            foreach (var methodInfo in type.DeclaredInstanceMethods())
+            foreach (var methodInfo in type.DeclaredMethods())
             {
                 yield return methodInfo;
             }
 
             if (type.BaseType() != null && type.BaseType() != typeof(object))
             {
-                foreach (var methodInfo in type.BaseType().GetAllInstanceMethods())
+                foreach (var methodInfo in type.BaseType().GetAllMethods())
                 {
                     yield return methodInfo;
                 }
