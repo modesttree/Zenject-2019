@@ -166,7 +166,7 @@ namespace Zenject
 
         protected void InstallSceneBindings()
         {
-			foreach (var binding in GetInjectableMonoBehaviours().OfType<ZenjectBinding>())
+            foreach (var binding in GetInjectableMonoBehaviours().OfType<ZenjectBinding>())
             {
                 if (binding == null)
                 {
@@ -193,28 +193,9 @@ namespace Zenject
                     InstallZenjectBinding(binding);
                 }
             }
-		}
+        }
 
-		[Inject]
-		private void InjectStaticClasses() {
-			var allAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-			                             .Where(a => a.FullName.Contains("Assembly-CSharp"));
-
-			var allStaticTypes = allAssemblies.SelectMany(a => a.GetTypes()).Where(t => t.IsStatic());
-
-			foreach (var type in allStaticTypes) {
-			    Container.InjectExplicit(null,
-			                             type,
-			                             new InjectArgs
-				                             {
-					                             Context = new InjectContext(Container, type, null),
-					                             ConcreteIdentifier = null,
-												 ExtraArgs = InjectUtil.CreateArgList( new object[0] )
-										 });
-		    }
-	    }
-
-	    void InstallZenjectBinding(ZenjectBinding binding)
+        void InstallZenjectBinding(ZenjectBinding binding)
         {
             if (!binding.enabled)
             {
