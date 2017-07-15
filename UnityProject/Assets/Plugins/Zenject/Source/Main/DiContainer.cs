@@ -933,8 +933,6 @@ namespace Zenject
                         }
                         else
                         {
-							if (injectable == null)
-								Debug.Log($"DiContainer.InjectExplicit(): injectableType='{injectableType}', injectInfo='{injectInfo.MemberName}'");
                             injectInfo.Setter(injectable, value);
                         }
                     }

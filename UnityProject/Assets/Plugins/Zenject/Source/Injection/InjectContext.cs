@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ModestTree;
+
+#if !NOT_UNITY3D
 using UnityEngine;
+#endif
 
 namespace Zenject
 {
@@ -249,6 +252,7 @@ namespace Zenject
             return result.ToString();
         }
 
+		#if !NOT_UNITY3D
 		public MonoBehaviour ToMonoBehaviourContext()
 		{
 			var monoBehaviourContext = this.ObjectInstance as MonoBehaviour;
@@ -266,5 +270,6 @@ namespace Zenject
 
 			return null;
 		}
+		#endif
 	}
 }
