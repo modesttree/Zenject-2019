@@ -168,8 +168,9 @@ namespace Zenject
 		[NotNull]
 	    private static Action<object, object> GetOnlyPropertySetter( [NotNull] Type parentType,
 	                                                                 [NotNull] string propertyName) {
-		    if (parentType == null) throw new ArgumentNullException(nameof(parentType));
-		    if (string.IsNullOrEmpty(propertyName)) throw new ArgumentException("Value cannot be null or empty.", nameof(propertyName));
+		    if (parentType == null) throw new ArgumentNullException("parentType");
+
+			if (string.IsNullOrEmpty(propertyName)) throw new ArgumentException("Value cannot be null or empty.", "propertyName");
 
 			var allFields = GetAllFields(parentType, BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public
 													| BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
