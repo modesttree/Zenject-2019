@@ -242,6 +242,26 @@ namespace Zenject.Tests.Bindings
             Assert.IsEqual(foo.transform.position, new Vector3(100, 100, 100));
         }
 
+        [Test]
+        public void TestInstantiatePrefabForComponentWithPositionExplicit()
+        {
+            Initialize();
+
+            var parentGameObject = new GameObject();
+            parentGameObject.transform.position = new Vector3(100, 100, 100);
+            var parentTransform = parentGameObject.transform;
+
+            var go = (Foo)Container.InstantiatePrefabForComponentExplicit(typeof(Foo), FooPrefab, new List<TypeValuePair>(), new GameObjectCreationParameters()
+            {
+                ParentTransform = parentTransform,
+                Position = new Vector3(50, 50, 50)
+            });
+
+            var foo = go.GetComponentInChildren<Foo>();
+
+            Assert.IsEqual(foo.transform.position, new Vector3(50, 50, 50));
+        }
+
         public class Qux
         {
             public static bool WasInjected

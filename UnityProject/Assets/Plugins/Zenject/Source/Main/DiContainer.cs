@@ -1091,8 +1091,19 @@ namespace Zenject
 
             try
             {
-                var gameObj = (GameObject)GameObject.Instantiate(
-                    prefabAsGameObject, GetTransformGroup(gameObjectBindInfo, context), false);
+                GameObject gameObj;
+                if (gameObjectBindInfo.Position.HasValue && gameObjectBindInfo.Rotation.HasValue)
+                    gameObj = (GameObject)GameObject.Instantiate(prefabAsGameObject, 
+                        gameObjectBindInfo.Position.Value,gameObjectBindInfo.Rotation.Value, GetTransformGroup(gameObjectBindInfo, context));
+                else if (gameObjectBindInfo.Position.HasValue)
+                    gameObj = (GameObject)GameObject.Instantiate(prefabAsGameObject, 
+                        gameObjectBindInfo.Position.Value,prefabAsGameObject.transform.rotation, GetTransformGroup(gameObjectBindInfo, context));
+                else if (gameObjectBindInfo.Rotation.HasValue)
+                    gameObj = (GameObject)GameObject.Instantiate(prefabAsGameObject, 
+                        prefabAsGameObject.transform.position, gameObjectBindInfo.Rotation.Value, GetTransformGroup(gameObjectBindInfo, context));
+                else
+                    gameObj = (GameObject)GameObject.Instantiate(
+                        prefabAsGameObject, GetTransformGroup(gameObjectBindInfo, context), false);
 
                 if (gameObjectBindInfo.Name != null)
                 {
@@ -1304,6 +1315,18 @@ namespace Zenject
         {
             return InstantiatePrefab(
                 prefab, new GameObjectCreationParameters() { ParentTransform = parentTransform });
+        }
+
+        // Create a new game object from a prefab and fill in dependencies for all children
+        public GameObject InstantiatePrefab(UnityEngine.Object prefab,Vector3 position,Quaternion rotation, Transform parentTransform)
+        {
+            return InstantiatePrefab(
+                prefab, new GameObjectCreationParameters()
+                {
+                    ParentTransform = parentTransform,
+                    Position = position,
+                    Rotation = rotation
+                });
         }
 
         // Create a new game object from a prefab and fill in dependencies for all children
