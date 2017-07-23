@@ -52,45 +52,47 @@ namespace Zenject
 
 #if !NOT_UNITY3D
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(
-            Func<TContract, bool> predicate, bool includeInactive = false)
-        {
-            return FromComponentInChildren(false, predicate, includeInactive);
-        }
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(Func<TContract, bool> predicate, bool includeInactive = false)
+		{
+			return FromComponentInChildren(false, predicate, includeInactive);
+		}
+
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren( bool excludeSelf = false,
+	                                                                       Func<TContract, bool> predicate = null,
+	                                                                       bool includeInactive = false )
+		{
+			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+
+			return FromMethodMultiple((ctx) => {
+				var monoBehaviourContext = ctx.ToMonoBehaviourContext();
+				Assert.IsNotNull(monoBehaviourContext);
+
+				var res = monoBehaviourContext.GetComponentsInChildren<TContract>(includeInactive)
+					 .Where(x => !ReferenceEquals(x, monoBehaviourContext));
+
+				if (excludeSelf) {
+					res = res.Where(x => (x as Component).gameObject != monoBehaviourContext.gameObject);
+				}
+
+				if (predicate != null) {
+					res = res.Where(predicate);
+				}
+
+				return res;
+			});
+		}
 
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(
-            bool excludeSelf = false, Func<TContract, bool> predicate = null, bool includeInactive = false)
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
-
-            return FromMethodMultiple((ctx) => {
-                Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                Assert.IsNotNull(ctx.ObjectInstance);
-
-                var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInChildren<TContract>(includeInactive)
-                                                             .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-
-                if (excludeSelf)
-                    res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
-
-                if (predicate != null) res = res.Where(predicate);
-
-                return res;
-            });
-        }
-
-
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInParents(bool excludeSelf = false)
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInParents(bool excludeSelf = false)
         {
             BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
             return FromMethodMultiple((ctx) =>
                 {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
+					var monoBehaviourContext = ctx.ToMonoBehaviourContext();
+					Assert.IsNotNull(monoBehaviourContext);
 
-                    var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInParent<TContract>()
+                    var res = monoBehaviourContext.GetComponentsInParent<TContract>()
                         .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
 
                     if (excludeSelf) res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
@@ -99,35 +101,40 @@ namespace Zenject
                 });
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentSibling()
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+        public ScopeArgConditionCopyNonLazyBinder FromComponentSibling() {
+	        foreach (var type in AllParentTypes) {
+				Assert.That(type == typeof(GameObject) || type.DerivesFrom(typeof(Component)) || type.IsInterface(),
+					"Invalid type given during bind command.  Expected type '{0}' to either derive from UnityEngine.Component, be a GameObject, or be an interface", type);
+			}
 
-            return FromMethodMultiple((ctx) =>
+			return FromMethodMultiple((ctx) =>
                 {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
+					var monoBehaviourContext = ctx.ToMonoBehaviourContext();
+					Assert.IsNotNull(monoBehaviourContext);
 
-                    return ((MonoBehaviour)ctx.ObjectInstance).GetComponents<TContract>()
+	                if (typeof(TContract) == typeof(GameObject))
+		                return monoBehaviourContext.GetComponents<Transform>().Select(t => (TContract)Convert.ChangeType(t.gameObject, typeof(TContract)))
+									.Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+
+					return monoBehaviourContext.GetComponents<TContract>()
                         .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
                 });
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInHierarchy(
-            Func<TContract, bool> predicate = null, bool includeInactive = false)
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+		public ScopeArgConditionCopyNonLazyBinder FromComponentInHierarchy(Func<TContract, bool> predicate = null, bool includeInactive = false)
+		{
+			BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
 
-            return FromMethodMultiple((ctx) => {
-                var res = ctx.Container.Resolve<Context>().GetRootGameObjects()
-                    .SelectMany(x => x.GetComponentsInChildren<TContract>(includeInactive))
-                    .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
+			return FromMethodMultiple((ctx) => {
+				var res = ctx.Container.Resolve<Context>().GetRootGameObjects()
+					.SelectMany(x => x.GetComponentsInChildren<TContract>(includeInactive))
+					.Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
 
-                if (predicate != null) res = res.Where(predicate);
+				if (predicate != null) res = res.Where(predicate);
 
-                return res;
-            });
-        }
+				return res;
+			});
+		}
 #endif
-    }
+	}
 }

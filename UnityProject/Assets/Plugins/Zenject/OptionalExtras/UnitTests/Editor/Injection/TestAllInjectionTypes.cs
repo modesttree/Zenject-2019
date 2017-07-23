@@ -45,13 +45,13 @@ namespace Zenject.Tests.Injection
             bool _didPostInjectBase;
 
             [Inject]
-            public static Test0 BaseStaticFieldPublic = null;
+            public static Test0 BaseStaticFieldPublic;
 
             [Inject]
-            static Test0 BaseStaticFieldPrivate = null;
+            static Test0 BaseStaticFieldPrivate;
 
             [Inject]
-            protected static Test0 BaseStaticFieldProtected = null;
+            protected static Test0 BaseStaticFieldProtected;
 
             [Inject]
             public static Test0 BaseStaticPropertyPublic
@@ -108,12 +108,12 @@ namespace Zenject.Tests.Injection
             [Inject]
             public void PostInjectBase()
             {
-                Assert.IsNull(BaseStaticFieldPublic);
-                Assert.IsNull(BaseStaticFieldPrivate);
-                Assert.IsNull(BaseStaticFieldProtected);
-                Assert.IsNull(BaseStaticPropertyPublic);
-                Assert.IsNull(BaseStaticPropertyPrivate);
-                Assert.IsNull(BaseStaticPropertyProtected);
+				Assert.IsNotNull(BaseStaticFieldPublic);
+                Assert.IsNotNull(BaseStaticFieldPrivate);
+                Assert.IsNotNull(BaseStaticFieldProtected);
+                Assert.IsNotNull(BaseStaticPropertyPublic);
+                Assert.IsNotNull(BaseStaticPropertyPrivate);
+                Assert.IsNotNull(BaseStaticPropertyProtected);
 
                 Assert.IsNotNull(BaseFieldPublic);
                 Assert.IsNotNull(BaseFieldPrivate);
@@ -153,13 +153,13 @@ namespace Zenject.Tests.Injection
             }
 
             [Inject]
-            public static Test0 DerivedStaticFieldPublic = null;
+            public static Test0 DerivedStaticFieldPublic;
 
             [Inject]
-            static Test0 DerivedStaticFieldPrivate = null;
+            static Test0 DerivedStaticFieldPrivate;
 
             [Inject]
-            protected static Test0 DerivedStaticFieldProtected = null;
+            protected static Test0 DerivedStaticFieldProtected;
 
             [Inject]
             public static Test0 DerivedStaticPropertyPublic
@@ -191,12 +191,12 @@ namespace Zenject.Tests.Injection
             [Inject]
             public void PostInject()
             {
-                Assert.IsNull(DerivedStaticFieldPublic);
-                Assert.IsNull(DerivedStaticFieldPrivate);
-                Assert.IsNull(DerivedStaticFieldProtected);
-                Assert.IsNull(DerivedStaticPropertyPublic);
-                Assert.IsNull(DerivedStaticPropertyPrivate);
-                Assert.IsNull(DerivedStaticPropertyProtected);
+				Assert.IsNotNull(DerivedStaticFieldPublic);
+                Assert.IsNotNull(DerivedStaticFieldPrivate);
+                Assert.IsNotNull(DerivedStaticFieldProtected);
+                Assert.IsNotNull(DerivedStaticPropertyPublic);
+                Assert.IsNotNull(DerivedStaticPropertyPrivate);
+                Assert.IsNotNull(DerivedStaticPropertyProtected);
 
                 Assert.IsNotNull(DerivedFieldPublic);
                 Assert.IsNotNull(DerivedFieldPrivate);

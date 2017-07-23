@@ -29,6 +29,8 @@ namespace Zenject
     {
         public const string DependencyRootIdentifier = "DependencyRoot";
 
+		public bool InheritMonoBehaviourBindings { get; set; }
+
         readonly Dictionary<BindingId, List<ProviderInfo>> _providers = new Dictionary<BindingId, List<ProviderInfo>>();
         readonly DiContainer _parentContainer;
         readonly Stack<LookupId> _resolvesInProgress = new Stack<LookupId>();
@@ -593,7 +595,7 @@ namespace Zenject
             // The problem is, we want the binding for Bind(typeof(Lazy<>)) to always match even
             // for members that are marked for a specific ID, so we need to discard the identifier
             // for this one particular case
-            if (context.MemberType.IsGenericType() && context.MemberType.GetGenericTypeDefinition() == typeof(Lazy<>))
+            if (context.MemberType.IsGenericType && context.MemberType.GetGenericTypeDefinition() == typeof(Lazy<>))
             {
                 lookupContext = context.Clone();
                 lookupContext.Identifier = null;
@@ -870,14 +872,19 @@ namespace Zenject
         {
             Type injectableType;
 
-            if (injectable is ValidationMarker)
+			if (injectable is ValidationMarker)
             {
                 injectableType = ((ValidationMarker)injectable).MarkedType;
             }
-            else
-            {
-                injectableType = injectable.GetType();
-            }
+            else {
+				var injectableAsType = injectable as Type;
+				if (injectableAsType != null) {
+		            injectableType = injectableAsType;
+		            injectable = null;
+	            } else {
+		            injectableType = injectable.GetType();
+	            }
+			}
 
             InjectExplicit(
                 injectable,
@@ -893,12 +900,10 @@ namespace Zenject
         public void InjectExplicit(
             object injectable, Type injectableType, InjectArgs args)
         {
-            Assert.That(injectable != null);
-
             // Installers are the only things that we instantiate/inject on during validation
             bool isDryRun = IsValidating && !CanCreateOrInjectDuringValidation(injectableType);
 
-            if (!isDryRun)
+			if (injectable != null && !isDryRun)
             {
                 Assert.IsEqual(injectable.GetType(), injectableType);
             }
@@ -1595,13 +1600,12 @@ namespace Zenject
         //    Any fields marked [Inject] will be set using the bindings on the container
         //    Any methods marked with a [Inject] will be called
         //    Any constructor parameters will be filled in with values from the container
-        public void Inject(object injectable)
-        {
-            Inject(injectable, new object[0]);
+        public void Inject(object injectable) {
+	        Inject(injectable, new object[0]);
         }
 
-        // Same as Inject(injectable) except allows adding extra values to be injected
-        public void Inject(object injectable, IEnumerable<object> extraArgs)
+		// Same as Inject(injectable) except allows adding extra values to be injected
+		public void Inject(object injectable, IEnumerable<object> extraArgs)
         {
             InjectExplicit(
                 injectable, InjectUtil.CreateArgList(extraArgs));

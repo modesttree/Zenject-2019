@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using ModestTree;
 
+#if !NOT_UNITY3D
+using UnityEngine;
+#endif
+
 namespace Zenject
 {
     public class InjectContext
@@ -247,5 +251,25 @@ namespace Zenject
 
             return result.ToString();
         }
-    }
+
+		#if !NOT_UNITY3D
+		public MonoBehaviour ToMonoBehaviourContext()
+		{
+			var monoBehaviourContext = this.ObjectInstance as MonoBehaviour;
+
+			if (monoBehaviourContext != null) return monoBehaviourContext;
+
+			//If the context is not MonoBehaviour look in the parent context
+			if (monoBehaviourContext == null && this.Container.InheritMonoBehaviourBindings) {
+				foreach (var ancestorContext in this.ParentContextsAndSelf) {
+					if (ancestorContext.ObjectInstance != null && ancestorContext.ObjectType.DerivesFromOrEqual<MonoBehaviour>()) {
+						return (MonoBehaviour)ancestorContext.ObjectInstance;
+					}
+				}
+			}
+
+			return null;
+		}
+		#endif
+	}
 }

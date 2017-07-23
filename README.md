@@ -165,6 +165,8 @@ The tests may also be helpful to show usage for each specific feature (which you
 
 What follows is a general overview of Dependency Injection from my perspective.  However, it is kept light, so I highly recommend seeking other resources for more information on the subject, as there are many other people (often with better writing ability) that have written about the theory behind it.
 
+Also see <a href="https://www.youtube.com/watch?v=8ZCkEXv3QsQ">here</a> for a video that serves as a nice introduction to the theory.
+
 When writing an individual class to achieve some functionality, it will likely need to interact with other classes in the system to achieve its goals.  One way to do this is to have the class itself create its dependencies, by calling concrete constructors:
 
 ```csharp
@@ -1082,8 +1084,6 @@ Another (arguably better) way to do this is to use ScriptableObjectInstaller ins
 
 ## <a id="object-graph-validation"></a>Object Graph Validation
 
-**Overview**
-
 The usual workflow when setting up bindings using a DI framework is something like this:
 
 * Add some number of bindings in code
@@ -1098,21 +1098,9 @@ You can do this in Zenject out-of-the-box by executing the menu item `Edit -> Ze
 
 Alternatively, you can execute the menu item `Edit -> Zenject -> Validate Then Run` or simply hitting CTRL+SHIFT+R.  This will validate the scenes you have open and then if validation succeeds, it will start play mode.  Validation is usually pretty fast so this can be a good alternative to always just hitting play, especially if your game has a costly startup time.
 
-**Under the hood**
-
-In object validation mode Zenject makes a "dry run" i.e. instead of all dependencies null values get injected.
-
-So there are a few things that are different from a regular run of game:
-
-- No actual logic code is executed, only install bindings is called.
-- For each Factory `Validate()` is called (see [Factory](https://github.com/modesttree/Zenject/blob/master/Documentation/Factories.md) docs).
-- **null** values are injected in all dependencies(regardles of what was binded)
-
-You might want to inject some classes even in validation mode. In that case mark them with `[ZenjectAllowDuringValidation]`.
-
 ## <a id="scene-bindings"></a>Scene Bindings
 
-In many cases, you have a number of MonoBehaviours that have been added to the scene within the Unity editor (ie. at editor time not runtime) and you want to also have these MonoBehaviours added to the Zenject Container so that they can be injected into other classes.
+In many cases, you have a number of MonoBehaviour's that have been added to the scene within the Unity editor (ie. at editor time not runtime) and you want to also have these MonoBehaviour's added to the Zenject Container so that they can be injected into other classes.
 
 The usual way this is done is to add public references to these objects within your installer like this:
 
@@ -1235,6 +1223,9 @@ The `ZenjectBinding` component has the following properties:
 
 * **Using multiple constructors**
     * Zenject does not support injecting into multiple constructors currently.  You can have multiple constructors however you must mark one of them with the [Inject] attribute so Zenject knows which one to use.
+
+* **Prefer [Inject] methods to Start/Awake methods for dynamically created MonoBehaviours**
+    * One issue that often arises when using Zenject is that a game object is instantiated dynamically, and then one of the MonoBehaviours on that game object attempts to use one of its injected field dependencies in its Start() or Awake() methods.  Often in these cases the dependency will still be null, as if it was never injected.  The issue here is that Zenject cannot fill in the dependencies until after the call to GameObject.Instantiate completes, and in most cases GameObject.Instantiate will call the Start() and Awake() methods.  The solution is to use neither Start() or Awake() and instead define a new method and mark it with a [Inject] attribute.  This will guarantee that all dependencies have been resolved before executing the method.
 
 * **Using Zenject outside of Unity**
     * Zenject is primarily designed to work within Unity3D.  However, it can also be used as a general purpose DI framework outside of Unity3D.  Zenject has been used within ASP.NET MVC and WPF projects successfully.  In order to do this, you can get the DLL from the Releases section of the GitHub page, or build the solution yourself at `NonUnityBuild/Zenject.sln`

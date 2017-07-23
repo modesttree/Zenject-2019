@@ -25,7 +25,7 @@ namespace Zenject
             _factoryArgs = factoryArgs;
 
             _createMethod = factoryType
-                .DeclaredInstanceMethods().Where(x => x.Name == "Create").Single();
+                .DeclaredMethods().Where(x => x.Name == "Create").Single();
 
             Assert.That(_createMethod.ReturnType == _concreteType);
         }

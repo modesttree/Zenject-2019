@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using ModestTree;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Reflection;
 
 namespace Zenject
 {
-    public static class TypeAnalyzer
+	public static class TypeAnalyzer
     {
         static Dictionary<Type, ZenjectTypeInfo> _typeInfo = new Dictionary<Type, ZenjectTypeInfo>();
 
@@ -21,7 +22,7 @@ namespace Zenject
             using (ProfileBlock.Start("Zenject Reflection"))
 #endif
             {
-                Assert.That(!type.IsAbstract(),
+				Assert.That(type.IsStatic() || !type.IsAbstract(),
                     "Tried to analyze abstract type '{0}'.  This is not currently allowed.", type);
 
                 ZenjectTypeInfo info;
@@ -105,7 +106,7 @@ namespace Zenject
             // This is so that we can ignore inherited attributes, which is necessary
             // otherwise a base class method marked with [Inject] would cause all overridden
             // derived methods to be added as well
-            var methods = type.GetAllInstanceMethods()
+            var methods = type.GetAllMethods()
                 .Where(x => x.GetCustomAttributes(typeof(InjectAttribute), false).Any()).ToList();
 
             var heirarchyList = type.Yield().Concat(type.GetParentTypes()).Reverse().ToList();
@@ -136,7 +137,7 @@ namespace Zenject
 
         static IEnumerable<InjectableInfo> GetPropertyInjectables(Type type)
         {
-            var propInfos = type.GetAllInstanceProperties()
+            var propInfos = type.GetAllProperties()
                 .Where(x => x.HasAttribute(typeof(InjectAttributeBase)));
 
             foreach (var propInfo in propInfos)
@@ -147,7 +148,7 @@ namespace Zenject
 
         static IEnumerable<InjectableInfo> GetFieldInjectables(Type type)
         {
-            var fieldInfos = type.GetAllInstanceFields()
+            var fieldInfos = type.GetAllFields()
                 .Where(x => x.HasAttribute(typeof(InjectAttributeBase)));
 
             foreach (var fieldInfo in fieldInfos)
@@ -156,40 +157,34 @@ namespace Zenject
             }
         }
 
-#if !(UNITY_WSA && ENABLE_DOTNET) || UNITY_EDITOR
-        private static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags)
-        {
-            if (t == null)
-            {
-                return Enumerable.Empty<FieldInfo>();
-            }
+		private static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags)
+		{
+			if (t == null)
+				return Enumerable.Empty<FieldInfo>();
 
-            return t.GetFields(flags).Concat(GetAllFields(t.BaseType, flags)).Distinct();
-        }
+			return t.GetFields(flags).Concat(GetAllFields(t.BaseType, flags)).Distinct();
+		}
 
-        private static Action<object, object> GetOnlyPropertySetter(
-            Type parentType,
-            string propertyName)
-        {
-            Assert.That(parentType != null);
-            Assert.That(!string.IsNullOrEmpty(propertyName));
+		[NotNull]
+	    private static Action<object, object> GetOnlyPropertySetter( [NotNull] Type parentType,
+	                                                                 [NotNull] string propertyName) {
+		    if (parentType == null) throw new ArgumentNullException("parentType");
 
-            var allFields = GetAllFields(
-                parentType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+			if (string.IsNullOrEmpty(propertyName)) throw new ArgumentException("Value cannot be null or empty.", "propertyName");
 
-            var writeableField = allFields.SingleOrDefault(
-                f => f.Name == string.Format("<{0}>k__BackingField", propertyName));
+			var allFields = GetAllFields(parentType, BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public
+													| BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 
-            if (writeableField == null)
-            {
-                throw new ZenjectException(string.Format(
-                    "Can't find backing field for get only property {0} on {1}.\r\n{2}",
-                    propertyName, parentType.FullName, string.Join(";", allFields.Select(f => f.Name).ToArray())));
-            }
+		    var writeableFields = allFields.Where(f => f.Name == string.Format("<{0}>k__BackingField", propertyName)).ToList();
 
-            return (injectable, value) => writeableField.SetValue(injectable, value);
-        }
-#endif
+			if (!writeableFields.Any()) {
+			    throw new ZenjectException(string.Format(
+			                                             "Can't find backing field for get only property {0} on {1}.\r\n{2}",
+			                                             propertyName, parentType.FullName,string.Join(";", allFields.Select(f => f.Name).ToArray())));
+		    }
+
+			return ( injectable, value ) => writeableFields.ForEach( f => f.SetValue(injectable, value) );
+		}
 
         static InjectableInfo CreateForMember(MemberInfo memInfo, Type parentType)
         {
@@ -224,20 +219,12 @@ namespace Zenject
             {
                 Assert.That(memInfo is PropertyInfo);
                 var propInfo = (PropertyInfo)memInfo;
-                memberType = propInfo.PropertyType;
+				memberType = propInfo.PropertyType;
 
-#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
-                setter = ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
-#else
-                if (propInfo.CanWrite)
-                {
-                    setter = ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
-                }
-                else
-                {
-                    setter = GetOnlyPropertySetter(parentType, propInfo.Name);
-                }
-#endif
+				if (propInfo.CanWrite)
+		            setter = (( object injectable, object value ) => propInfo.SetValue(injectable, value, null));
+	            else
+		            setter = GetOnlyPropertySetter(parentType, propInfo.Name);
             }
 
             return new InjectableInfo(

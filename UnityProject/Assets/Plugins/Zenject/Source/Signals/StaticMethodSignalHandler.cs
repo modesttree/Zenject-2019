@@ -75,7 +75,7 @@ namespace Zenject
 
         public override void Execute(object[] args)
         {
-            Assert.That(args.IsLength(2));
+            Assert.That(args.IsLength(1));
             ValidateParameter<TParam1>(args[0]);
             ValidateParameter<TParam2>(args[1]);
 #if UNITY_EDITOR
@@ -106,7 +106,7 @@ namespace Zenject
 
         public override void Execute(object[] args)
         {
-            Assert.That(args.IsLength(3));
+            Assert.That(args.IsLength(1));
             ValidateParameter<TParam1>(args[0]);
             ValidateParameter<TParam2>(args[1]);
             ValidateParameter<TParam3>(args[2]);
@@ -139,7 +139,7 @@ namespace Zenject
 
         public override void Execute(object[] args)
         {
-            Assert.That(args.IsLength(4));
+            Assert.That(args.IsLength(1));
             ValidateParameter<TParam1>(args[0]);
             ValidateParameter<TParam2>(args[1]);
             ValidateParameter<TParam3>(args[2]);
