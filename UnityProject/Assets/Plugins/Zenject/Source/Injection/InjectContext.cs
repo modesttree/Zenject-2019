@@ -259,11 +259,17 @@ namespace Zenject
 
 			if (monoBehaviourContext != null) return monoBehaviourContext;
 
-			//If the context is not MonoBehaviour look in the parent context
+			// If the context is not MonoBehaviour look in the parent context
 			if (monoBehaviourContext == null && this.Container.InheritMonoBehaviourBindings) {
 				foreach (var ancestorContext in this.ParentContextsAndSelf) {
 					if (ancestorContext.ObjectInstance != null && ancestorContext.ObjectType.DerivesFromOrEqual<MonoBehaviour>()) {
-						return (MonoBehaviour)ancestorContext.ObjectInstance;
+						var ancestorContextInstance = (MonoBehaviour)ancestorContext.ObjectInstance;
+
+						// Make sure that the context returned is not a Zenject object (e.g. MonoKernel).
+						if (ancestorContextInstance.GetType().Namespace.Contains("Zenject"))
+							return null;
+
+						return ancestorContextInstance;
 					}
 				}
 			}
