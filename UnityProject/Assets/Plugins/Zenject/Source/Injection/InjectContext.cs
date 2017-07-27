@@ -266,7 +266,7 @@ namespace Zenject
 						var ancestorContextInstance = (MonoBehaviour)ancestorContext.ObjectInstance;
 
 						// Make sure that the context returned is not a Zenject object (e.g. MonoKernel).
-						if (ancestorContextInstance.GetType().Namespace.Contains("Zenject"))
+						if (ancestorContext.ObjectType.Namespace != null && ancestorContext.ObjectType.Namespace.Contains("Zenject"))
 							return null;
 
 						return ancestorContextInstance;
