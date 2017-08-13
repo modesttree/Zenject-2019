@@ -12,7 +12,7 @@ using Zenject.Internal;
 
 namespace Zenject
 {
-    public class SceneContext : Context
+    public class SceneContext : RunnableContext
     {
         public static Action<DiContainer> ExtraBindingsInstallMethod;
 
@@ -35,10 +35,6 @@ namespace Zenject
         [SerializeField]
         List<string> _parentContractNames = new List<string>();
 
-        [Tooltip("When false, wait until run method is explicitly called. Otherwise run on awake")]
-        [SerializeField]
-        bool _autoRun = true;
-
         DiContainer _container;
         readonly List<object> _dependencyRoots = new List<object>();
 
@@ -46,8 +42,6 @@ namespace Zenject
 
         bool _hasInstalled;
         bool _hasResolved;
-
-        static bool _staticAutoRun = true;
 
         public override DiContainer Container
         {
@@ -116,18 +110,7 @@ namespace Zenject
         {
             CheckParentContractName();
 
-            // We always want to initialize ProjectContext as early as possible
-            ProjectContext.Instance.EnsureIsInitialized();
-
-            if (_staticAutoRun && _autoRun)
-            {
-                Run();
-            }
-            else
-            {
-                // True should always be default
-                _staticAutoRun = true;
-            }
+            Initialize();
         }
 
 #if UNITY_EDITOR
@@ -143,9 +126,13 @@ namespace Zenject
         }
 #endif
 
-        public void Run()
+        protected override void RunInternal()
         {
+            // We always want to initialize ProjectContext as early as possible
+            ProjectContext.Instance.EnsureIsInitialized();
+
             Assert.That(!IsValidating);
+
             Install();
             Resolve();
         }
@@ -335,16 +322,8 @@ namespace Zenject
         // and add what installers you want before kicking off the Install/Resolve
         public static SceneContext Create()
         {
-            return CreateComponent(
+            return CreateComponent<SceneContext>(
                 new GameObject("SceneContext"));
-        }
-
-        public static SceneContext CreateComponent(GameObject gameObject)
-        {
-            _staticAutoRun = false;
-            var result = gameObject.AddComponent<SceneContext>();
-            Assert.That(_staticAutoRun); // Should be reset
-            return result;
         }
     }
 }

@@ -13,7 +13,7 @@ using Zenject.Internal;
 
 namespace Zenject
 {
-    public class GameObjectContext : Context
+    public class GameObjectContext : RunnableContext
     {
         readonly List<object> _dependencyRoots = new List<object>();
 
@@ -42,6 +42,11 @@ namespace Zenject
 
             _container = parentContainer.CreateSubContainer();
 
+            Initialize();
+        }
+
+        protected override void RunInternal()
+        {
             foreach (var instance in GetInjectableMonoBehaviours().Cast<object>())
             {
                 if (instance is MonoKernel)

@@ -3,7 +3,7 @@ using UnityEditor;
 namespace Zenject
 {
     [CustomEditor(typeof(GameObjectContext))]
-    public class GameObjectContextEditor : ContextEditor
+    public class GameObjectContextEditor : RunnableContextEditor
     {
         SerializedProperty _kernel;
 
