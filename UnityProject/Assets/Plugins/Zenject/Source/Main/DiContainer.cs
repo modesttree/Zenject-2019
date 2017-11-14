@@ -1215,6 +1215,9 @@ namespace Zenject
 
             if (wasActive)
             {
+#if UNITY_EDITOR
+                UnityEditor.Undo.RecordObject(prefabAsGameObject, prefabAsGameObject.name + " Prefab Active Self");
+#endif
                 prefabAsGameObject.SetActive(false);
             }
 
@@ -1260,6 +1263,9 @@ namespace Zenject
                     // Always make sure to reset prefab state otherwise this change could be saved
                     // persistently
                     prefabAsGameObject.SetActive(true);
+#if UNITY_EDITOR
+					UnityEditor.Undo.PerformUndo();
+#endif
                 }
             }
         }
@@ -2740,4 +2746,3 @@ namespace Zenject
         }
     }
 }
-
