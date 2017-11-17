@@ -1262,7 +1262,7 @@ namespace Zenject
                 if (wasActive)
                 {
 #if UNITY_EDITOR
-					GameObject.DestroyImmediate(prefabAsGameObject);
+					GameObject.Destroy(prefabAsGameObject);
 					ProjectContext.Instance.Container.DefaultParent.gameObject.SetActive(true);
 #else
 					// Always make sure to reset prefab state otherwise this change could be saved
