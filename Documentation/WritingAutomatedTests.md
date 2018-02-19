@@ -52,7 +52,9 @@ public class TestLogger : ZenjectUnitTestFixture
     [SetUp]
     public void CommonInstall()
     {
-        Container.Bind<Logger>().AsSingle();
+        PreInstall ();
+        Container.Bind<Logger> ().AsSingle ();
+        PostInstall ();
     }
 
     [Test]
@@ -87,8 +89,7 @@ public class TestLogger : ZenjectUnitTestFixture
     public void TestNullValue()
     {
         var logger = Container.Resolve<Logger>();
-
-        Assert.Throws(() => logger.Write(null));
+        Assert.Throws<System.ArgumentException> (() => logger.Write (null));
     }
 }
 
