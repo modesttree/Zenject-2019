@@ -36,8 +36,7 @@ namespace Zenject
             ForceUnloadAllScenes(true);
 
             Assert.That(!IsDestroyed);
-            GameObject.DestroyImmediate(this.gameObject);
-            Assert.That(IsDestroyed);
+            GameObject.Destroy(this.gameObject);
         }
 
         public void ForceUnloadAllScenes(bool immediate = false)
