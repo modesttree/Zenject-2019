@@ -13,7 +13,7 @@ namespace Zenject
 {
     public static class ZenMenuItems
     {
-        [MenuItem("Edit/Zenject/Validate Current Scenes #%v")]
+        [MenuItem("Edit/Zenject/Validate Current Scenes #&v")]
         public static void ValidateCurrentScene()
         {
             ValidateCurrentSceneInternal();
