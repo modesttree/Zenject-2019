@@ -125,14 +125,21 @@ namespace Zenject
         protected TContract GetInternal()
         {
             TContract item;
-
             if (_inactiveItems.Count == 0)
             {
                 ExpandPool();
                 Assert.That(!_inactiveItems.IsEmpty());
             }
 
-            item = _inactiveItems.Pop();
+            do
+            {
+                item = _inactiveItems.Pop();
+                if (item != null || _inactiveItems.Count != 0)
+                    continue;
+                ExpandPool();
+                Assert.That(!_inactiveItems.IsEmpty());
+            }
+            while (item == null);
 
             _activeCount++;
 
