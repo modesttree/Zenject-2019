@@ -13,6 +13,9 @@ namespace Zenject
         List<InitializableInfo> _initializables;
 
         bool _hasInitialized;
+#if ZEN_MULTITHREADING
+        readonly object _locker = new object();
+#endif
 
         [Inject]
         public InitializableManager(
@@ -67,6 +70,9 @@ namespace Zenject
                 try
                 {
 #if UNITY_EDITOR
+#if ZEN_MULTITHREADING
+                    lock (_locker)
+#endif
                     using (ProfileBlock.Start("{0}.Initialize()", initializable.Initializable.GetType()))
 #endif
                     {

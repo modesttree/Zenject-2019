@@ -43,6 +43,9 @@ namespace Zenject
 
         readonly HashSet<Type> _validatedTypes = new HashSet<Type>();
         readonly List<IValidatable> _validationQueue = new List<IValidatable>();
+#if ZEN_MULTITHREADING
+        readonly object locker = new object();
+#endif
 
 #if !NOT_UNITY3D
         Context _context;
@@ -347,22 +350,27 @@ namespace Zenject
                 var bindId = rootBindings[i];
                 var providerInfo = rootProviders[i];
 
-                using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+                lock (locker)
+#endif
                 {
-                    var context = block.Spawn(InjectContext.Pool, this, bindId.Type);
+                    using (var block = DisposeBlock.Spawn())
+                    {
+                        var context = block.Spawn(InjectContext.Pool, this, bindId.Type);
 
-                    context.Identifier = bindId.Identifier;
-                    context.SourceType = InjectSources.Local;
+                        context.Identifier = bindId.Identifier;
+                        context.SourceType = InjectSources.Local;
 
-                    // Should this be true?  Are there cases where you are ok that NonLazy matches
-                    // zero providers?
-                    // Probably better to be false to catch mistakes
-                    context.Optional = false;
+                        // Should this be true?  Are there cases where you are ok that NonLazy matches
+                        // zero providers?
+                        // Probably better to be false to catch mistakes
+                        context.Optional = false;
 
-                    SafeGetInstances(providerInfo, context);
+                        SafeGetInstances(providerInfo, context);
 
-                    // Zero matches might actually be valid in some cases
-                    //Assert.That(matches.Any());
+                        // Zero matches might actually be valid in some cases
+                        //Assert.That(matches.Any());
+                    }
                 }
             }
         }
@@ -372,19 +380,24 @@ namespace Zenject
             Assert.That(!_hasResolvedRoots);
             Assert.That(IsValidating);
 
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                foreach (var bindingId in block.SpawnList<BindingId>(_providers.Keys))
+                using (var block = DisposeBlock.Spawn())
                 {
-                    if (!bindingId.Type.IsOpenGenericType())
+                    foreach (var bindingId in block.SpawnList<BindingId>(_providers.Keys))
                     {
-                        using (var context = InjectContext.Pool.Spawn(this, bindingId.Type))
+                        if (!bindingId.Type.IsOpenGenericType())
                         {
-                            context.Identifier = bindingId.Identifier;
-                            context.SourceType = InjectSources.Local;
-                            context.Optional = true;
+                            using (var context = InjectContext.Pool.Spawn(this, bindingId.Type))
+                            {
+                                context.Identifier = bindingId.Identifier;
+                                context.SourceType = InjectSources.Local;
+                                context.Optional = true;
 
-                            ResolveAll(context);
+                                ResolveAll(context);
+                            }
                         }
                     }
                 }
@@ -399,21 +412,26 @@ namespace Zenject
 #if !NOT_UNITY3D && !ZEN_TESTS_OUTSIDE_UNITY
             Assert.That(Application.isEditor);
 #endif
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var validatables = block.SpawnList<IValidatable>();
-
-                // Repeatedly flush the validation queue until it's empty, to account for
-                // cases where calls to Validate() add more objects to the queue
-                while (_validationQueue.Any())
+                using (var block = DisposeBlock.Spawn())
                 {
-                    validatables.Clear();
-                    validatables.AddRange(_validationQueue);
-                    _validationQueue.Clear();
+                    var validatables = block.SpawnList<IValidatable>();
 
-                    for (int i = 0; i < validatables.Count; i++)
+                    // Repeatedly flush the validation queue until it's empty, to account for
+                    // cases where calls to Validate() add more objects to the queue
+                    while (_validationQueue.Any())
                     {
-                        validatables[i].Validate();
+                        validatables.Clear();
+                        validatables.AddRange(_validationQueue);
+                        _validationQueue.Clear();
+
+                        for (int i = 0; i < validatables.Count; i++)
+                        {
+                            validatables[i].Validate();
+                        }
                     }
                 }
             }
@@ -469,20 +487,25 @@ namespace Zenject
             Assert.IsNotNull(context);
             Assert.That(buffer.IsEmpty());
 
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var allMatches = block.SpawnList<ProviderInfo>();
-
-                GetProvidersForContract(
-                    context.BindingId, context.SourceType, allMatches);
-
-                for (int i = 0; i < allMatches.Count; i++)
+                using (var block = DisposeBlock.Spawn())
                 {
-                    var match = allMatches[i];
+                    var allMatches = block.SpawnList<ProviderInfo>();
 
-                    if (match.Condition == null || match.Condition(context))
+                    GetProvidersForContract(
+                        context.BindingId, context.SourceType, allMatches);
+
+                    for (int i = 0; i < allMatches.Count; i++)
                     {
-                        buffer.Add(match);
+                        var match = allMatches[i];
+
+                        if (match.Condition == null || match.Condition(context))
+                        {
+                            buffer.Add(match);
+                        }
                     }
                 }
             }
@@ -496,95 +519,100 @@ namespace Zenject
 
             ForAllContainersToLookup(sourceType, container => container.FlushBindings());
 
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var localProviders = block.SpawnList<ProviderInfo>();
-
-                ProviderInfo selected = null;
-                int selectedDistance = Int32.MaxValue;
-                bool selectedHasCondition = false;
-                bool ambiguousSelection = false;
-
-                ForAllContainersToLookup(sourceType, container =>
+                using (var block = DisposeBlock.Spawn())
                 {
-                    int curDistance = GetContainerHeirarchyDistance(container);
-                    if (curDistance > selectedDistance)
+                    var localProviders = block.SpawnList<ProviderInfo>();
+
+                    ProviderInfo selected = null;
+                    int selectedDistance = Int32.MaxValue;
+                    bool selectedHasCondition = false;
+                    bool ambiguousSelection = false;
+
+                    ForAllContainersToLookup(sourceType, container =>
                     {
+                        int curDistance = GetContainerHeirarchyDistance(container);
+                        if (curDistance > selectedDistance)
+                        {
                         // If matching provider was already found lower in the hierarchy => don't search for a new one,
                         // because there can't be a better or equal provider in this container.
                         return;
-                    }
+                        }
 
-                    localProviders.Clear();
-                    container.GetLocalProviders(bindingId, localProviders);
+                        localProviders.Clear();
+                        container.GetLocalProviders(bindingId, localProviders);
 
-                    for (int i = 0; i < localProviders.Count; i++)
-                    {
-                        var provider = localProviders[i];
-
-                        bool curHasCondition = provider.Condition != null;
-
-                        if (curHasCondition && !provider.Condition(context))
+                        for (int i = 0; i < localProviders.Count; i++)
                         {
+                            var provider = localProviders[i];
+
+                            bool curHasCondition = provider.Condition != null;
+
+                            if (curHasCondition && !provider.Condition(context))
+                            {
                             // The condition is not satisfied.
                             continue;
-                        }
+                            }
 
                         // The distance can't decrease becuase we are iterating over the containers with increasing distance.
                         // The distance can't increase because  we skip the container if the distance is greater than selected.
                         // So the distances are equal and only the condition can help resolving the amiguity.
                         Assert.That(selected == null || selectedDistance == curDistance);
 
-                        if (curHasCondition)
-                        {
-                            if (selectedHasCondition)
+                            if (curHasCondition)
                             {
+                                if (selectedHasCondition)
+                                {
                                 // Both providers have condition and are on equal depth.
                                 ambiguousSelection = true;
+                                }
+                                else
+                                {
+                                // Ambiguity is resolved because a provider with condition was found.
+                                ambiguousSelection = false;
+                                }
                             }
                             else
                             {
-                                // Ambiguity is resolved because a provider with condition was found.
-                                ambiguousSelection = false;
-                            }
-                        }
-                        else
-                        {
-                            if (selectedHasCondition)
-                            {
+                                if (selectedHasCondition)
+                                {
                                 // Selected provider is better because it has condition.
                                 continue;
-                            }
-                            if (selected != null && !selectedHasCondition)
-                            {
+                                }
+                                if (selected != null && !selectedHasCondition)
+                                {
                                 // Both providers don't have a condition and are on equal depth.
                                 ambiguousSelection = true;
+                                }
                             }
-                        }
 
-                        if (ambiguousSelection)
-                        {
-                            continue;
-                        }
+                            if (ambiguousSelection)
+                            {
+                                continue;
+                            }
 
-                        selectedDistance = curDistance;
-                        selectedHasCondition = curHasCondition;
-                        selected = provider;
+                            selectedDistance = curDistance;
+                            selectedHasCondition = curHasCondition;
+                            selected = provider;
+                        }
+                    });
+
+                    if (ambiguousSelection)
+                    {
+                        throw Assert.CreateException(
+                            "Found multiple matches when only one was expected for type '{0}'{1}. \nObject graph:\n {2}",
+                            context.MemberType,
+                            (context.ObjectType == null
+                                ? ""
+                                : " while building object with type '{0}'".Fmt(context.ObjectType)),
+                            context.GetObjectGraphString());
                     }
-                });
 
-                if (ambiguousSelection)
-                {
-                    throw Assert.CreateException(
-                        "Found multiple matches when only one was expected for type '{0}'{1}. \nObject graph:\n {2}",
-                        context.MemberType,
-                        (context.ObjectType == null
-                            ? ""
-                            : " while building object with type '{0}'".Fmt(context.ObjectType)),
-                        context.GetObjectGraphString());
+                    return selected;
                 }
-
-                return selected;
             }
         }
 
@@ -699,11 +727,16 @@ namespace Zenject
 
         public IList ResolveAll(InjectContext context)
         {
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var buffer = block.SpawnList<object>();
-                ResolveAllInternal(context, buffer);
-                return ReflectionUtil.CreateGenericList(context.MemberType, buffer);
+                using (var block = DisposeBlock.Spawn())
+                {
+                    var buffer = block.SpawnList<object>();
+                    ResolveAllInternal(context, buffer);
+                    return ReflectionUtil.CreateGenericList(context.MemberType, buffer);
+                }
             }
         }
 
@@ -715,56 +748,61 @@ namespace Zenject
             FlushBindings();
             CheckForInstallWarning(context);
 
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var matches = block.SpawnList<ProviderInfo>();
-
-                GetProviderMatches(context, matches);
-
-                if (matches.IsEmpty())
+                using (var block = DisposeBlock.Spawn())
                 {
-                    if (!context.Optional)
+                    var matches = block.SpawnList<ProviderInfo>();
+
+                    GetProviderMatches(context, matches);
+
+                    if (matches.IsEmpty())
                     {
-                        throw Assert.CreateException(
-                            "Could not find required dependency with type '{0}' \nObject graph:\n {1}", context.MemberType, context.GetObjectGraphString());
-                    }
-
-                    return;
-                }
-
-                var allInstances = block.SpawnList<object>();
-
-                for (int i = 0; i < matches.Count; i++)
-                {
-                    var match = matches[i];
-                    var instances = SafeGetInstances(match, context);
-
-                    for (int k = 0; k < instances.Count; k++)
-                    {
-                        allInstances.Add(instances[k]);
-                    }
-                }
-
-                if (allInstances.Count == 0 && !context.Optional)
-                {
-                    throw Assert.CreateException(
-                        "Could not find required dependency with type '{0}'.  Found providers but they returned zero results!", context.MemberType);
-                }
-
-                if (IsValidating)
-                {
-                    for (int i = 0; i < allInstances.Count; i++)
-                    {
-                        var instance = allInstances[i];
-
-                        if (instance is ValidationMarker)
+                        if (!context.Optional)
                         {
-                            allInstances[i] = context.MemberType.GetDefaultValue();
+                            throw Assert.CreateException(
+                                "Could not find required dependency with type '{0}' \nObject graph:\n {1}", context.MemberType, context.GetObjectGraphString());
+                        }
+
+                        return;
+                    }
+
+                    var allInstances = block.SpawnList<object>();
+
+                    for (int i = 0; i < matches.Count; i++)
+                    {
+                        var match = matches[i];
+                        var instances = SafeGetInstances(match, context);
+
+                        for (int k = 0; k < instances.Count; k++)
+                        {
+                            allInstances.Add(instances[k]);
                         }
                     }
-                }
 
-                buffer.AddRange(allInstances);
+                    if (allInstances.Count == 0 && !context.Optional)
+                    {
+                        throw Assert.CreateException(
+                            "Could not find required dependency with type '{0}'.  Found providers but they returned zero results!", context.MemberType);
+                    }
+
+                    if (IsValidating)
+                    {
+                        for (int i = 0; i < allInstances.Count; i++)
+                        {
+                            var instance = allInstances[i];
+
+                            if (instance is ValidationMarker)
+                            {
+                                allInstances[i] = context.MemberType.GetDefaultValue();
+                            }
+                        }
+                    }
+
+                    buffer.AddRange(allInstances);
+                }
             }
         }
 
@@ -834,9 +872,14 @@ namespace Zenject
         // This is safe to use within installers
         public Type ResolveType(Type type)
         {
-            using (var context = InjectContext.Pool.Spawn(this, type))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                return ResolveType(context);
+                using (var context = InjectContext.Pool.Spawn(this, type))
+                {
+                    return ResolveType(context);
+                }
             }
         }
 
@@ -870,10 +913,15 @@ namespace Zenject
 
         public List<Type> ResolveTypeAll(Type type, object identifier)
         {
-            using (var context = InjectContext.Pool.Spawn(this, type))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                context.Identifier = identifier;
-                return ResolveTypeAll(context);
+                using (var context = InjectContext.Pool.Spawn(this, type))
+                {
+                    context.Identifier = identifier;
+                    return ResolveTypeAll(context);
+                }
             }
         }
 
@@ -883,30 +931,39 @@ namespace Zenject
             Assert.IsNotNull(context);
 
             FlushBindings();
-
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var matches = block.SpawnList<ProviderInfo>();
-
-                GetProviderMatches(context, matches);
-
-                if (matches.Count > 0 )
+                using (var block = DisposeBlock.Spawn())
                 {
-                    return matches.Select(
-                        x => x.Provider.GetInstanceType(context))
-                        .Where(x => x != null).ToList();
-                }
+                    var matches = block.SpawnList<ProviderInfo>();
 
-                return new List<Type> {};
+                    GetProviderMatches(context, matches);
+
+                    if (matches.Count > 0)
+                    {
+                        return matches.Select(
+                            x => x.Provider.GetInstanceType(context))
+                            .Where(x => x != null).ToList();
+                    }
+
+                    return new List<Type> { };
+                }
             }
         }
 
         public object Resolve(BindingId id)
         {
-            using (var context = InjectContext.Pool.Spawn(this, id.Type))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                context.Identifier = id.Identifier;
-                return Resolve(context);
+                using (var context = InjectContext.Pool.Spawn(this, id.Type))
+                {
+                    context.Identifier = id.Identifier;
+                    return Resolve(context);
+                }
             }
         }
 
@@ -951,12 +1008,16 @@ namespace Zenject
                     // will pass validation, which could be error prone, but I think this is better
                     // than always requiring that they explicitly mark their array types as optional
                     subContext.Optional = true;
-
-                    using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+                    lock (locker)
+#endif
                     {
-                        var instances = block.SpawnList<object>();
-                        ResolveAllInternal(subContext, instances);
-                        return ReflectionUtil.CreateArray(subContext.MemberType, instances);
+                        using (var block = DisposeBlock.Spawn())
+                        {
+                            var instances = block.SpawnList<object>();
+                            ResolveAllInternal(subContext, instances);
+                            return ReflectionUtil.CreateArray(subContext.MemberType, instances);
+                        }
                     }
                 }
 
@@ -1222,10 +1283,15 @@ namespace Zenject
                     if (!InjectUtil.PopValueWithType(
                         args.ExtraArgs, injectInfo.MemberType, out value))
                     {
-                        using (var context = injectInfo.SpawnInjectContext(
-                            this, args.Context, null, args.ConcreteIdentifier))
+#if ZEN_MULTITHREADING
+                        lock (locker)
+#endif
                         {
-                            value = Resolve(context);
+                            using (var context = injectInfo.SpawnInjectContext(
+                                this, args.Context, null, args.ConcreteIdentifier))
+                            {
+                                value = Resolve(context);
+                            }
                         }
                     }
 
@@ -1246,11 +1312,14 @@ namespace Zenject
                     try
                     {
 #if UNITY_EDITOR
-                        using (ProfileBlock.Start("{0}.{1}()", concreteType, concreteType.Name))
+#if ZEN_MULTITHREADING
+                        lock (locker)
 #endif
-                        {
-                            newObj = typeInfo.InjectConstructor.Invoke(paramValues.ToArray());
-                        }
+                            using (ProfileBlock.Start("{0}.{1}()", concreteType, concreteType.Name))
+#endif
+                            {
+                                newObj = typeInfo.InjectConstructor.Invoke(paramValues.ToArray());
+                            }
                     }
                     catch (Exception e)
                     {
@@ -1395,10 +1464,15 @@ namespace Zenject
                 }
                 else
                 {
-                    using (var context = injectInfo.SpawnInjectContext(
-                        this, args.Context, injectable, args.ConcreteIdentifier))
+#if ZEN_MULTITHREADING
+                    lock (locker)
+#endif
                     {
-                        value = Resolve(context);
+                        using (var context = injectInfo.SpawnInjectContext(
+                            this, args.Context, injectable, args.ConcreteIdentifier))
+                        {
+                            value = Resolve(context);
+                        }
                     }
 
                     if (injectInfo.Optional && value == null)
@@ -1424,51 +1498,57 @@ namespace Zenject
 
             foreach (var method in typeInfo.PostInjectMethods)
             {
+
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.{1}()", injectableType, method.MethodInfo.Name))
+#if ZEN_MULTITHREADING
+                lock (locker)
 #endif
-                {
-                    var paramValues = new List<object>();
-
-                    foreach (var injectInfo in method.InjectableInfo)
+                    using (ProfileBlock.Start("{0}.{1}()", injectableType, method.MethodInfo.Name))
+#endif
                     {
-                        object value;
+                        var paramValues = new List<object>();
 
-                        if (!InjectUtil.PopValueWithType(args.ExtraArgs, injectInfo.MemberType, out value))
-                        {
-                            using (var context = injectInfo.SpawnInjectContext(
-                                this, args.Context, injectable, args.ConcreteIdentifier))
+                            foreach (var injectInfo in method.InjectableInfo)
                             {
-                                value = Resolve(context);
+                                object value;
+
+                                if (!InjectUtil.PopValueWithType(args.ExtraArgs, injectInfo.MemberType, out value))
+                                {
+                                    using (var context = injectInfo.SpawnInjectContext(
+                                        this, args.Context, injectable, args.ConcreteIdentifier))
+                                    {
+                                        value = Resolve(context);
+                                    }
+                                }
+
+                                if (value is ValidationMarker)
+                                {
+                                    Assert.That(IsValidating);
+                                    paramValues.Add(injectInfo.MemberType.GetDefaultValue());
+                                }
+                                else
+                                {
+                                    paramValues.Add(value);
+                                }
                             }
-                        }
 
-                        if (value is ValidationMarker)
+                        if (!isDryRun)
                         {
-                            Assert.That(IsValidating);
-                            paramValues.Add(injectInfo.MemberType.GetDefaultValue());
-                        }
-                        else
-                        {
-                            paramValues.Add(value);
-                        }
-                    }
-
-                    if (!isDryRun)
-                    {
 #if !NOT_UNITY3D
-                        // Handle IEnumerators (Coroutines) as a special case by calling StartCoroutine() instead of invoking directly.
-                        if (method.MethodInfo.ReturnType == typeof(IEnumerator))
-                        {
-                            StartCoroutine(injectable, method, paramValues);
-                        }
+                            // Handle IEnumerators (Coroutines) as a special case by calling StartCoroutine() instead of invoking directly.
+                            if (method.MethodInfo.ReturnType == typeof(IEnumerator))
+                            {
+                                StartCoroutine(injectable, method, paramValues);
+                            }
                         else
 #endif
                         {
                             method.MethodInfo.Invoke(injectable, paramValues.ToArray());
                         }
                     }
+
                 }
+                
             }
 
             if (!args.ExtraArgs.IsEmpty())
@@ -2249,10 +2329,15 @@ namespace Zenject
 
         public object ResolveId(Type contractType, object identifier)
         {
-            using (var context = InjectContext.Pool.Spawn(this, contractType))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                context.Identifier = identifier;
-                return Resolve(context);
+                using (var context = InjectContext.Pool.Spawn(this, contractType))
+                {
+                    context.Identifier = identifier;
+                    return Resolve(context);
+                }
             }
         }
 
@@ -2278,11 +2363,16 @@ namespace Zenject
 
         public object TryResolveId(Type contractType, object identifier)
         {
-            using (var context = InjectContext.Pool.Spawn(this, contractType))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                context.Identifier = identifier;
-                context.Optional = true;
-                return Resolve(context);
+                using (var context = InjectContext.Pool.Spawn(this, contractType))
+                {
+                    context.Identifier = identifier;
+                    context.Optional = true;
+                    return Resolve(context);
+                }
             }
         }
 
@@ -2304,11 +2394,16 @@ namespace Zenject
 
         public IList ResolveIdAll(Type contractType, object identifier)
         {
-            using (var context = InjectContext.Pool.Spawn(this, contractType))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                context.Identifier = identifier;
-                context.Optional = true;
-                return ResolveAll(context);
+                using (var context = InjectContext.Pool.Spawn(this, contractType))
+                {
+                    context.Identifier = identifier;
+                    context.Optional = true;
+                    return ResolveAll(context);
+                }
             }
         }
 
@@ -2424,11 +2519,16 @@ namespace Zenject
 
         public bool HasBindingId(Type contractType, object identifier, InjectSources sourceType)
         {
-            using (var ctx = InjectContext.Pool.Spawn(this, contractType))
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                ctx.Identifier = identifier;
-                ctx.SourceType = sourceType;
-                return HasBinding(ctx);
+                using (var ctx = InjectContext.Pool.Spawn(this, contractType))
+                {
+                    ctx.Identifier = identifier;
+                    ctx.SourceType = sourceType;
+                    return HasBinding(ctx);
+                }
             }
         }
 
@@ -2438,14 +2538,18 @@ namespace Zenject
             Assert.IsNotNull(context);
 
             FlushBindings();
-
-            using (var block = DisposeBlock.Spawn())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                var matches = block.SpawnList<ProviderInfo>();
+                using (var block = DisposeBlock.Spawn())
+                {
+                    var matches = block.SpawnList<ProviderInfo>();
 
-                GetProviderMatches(context, matches);
+                    GetProviderMatches(context, matches);
 
-                return matches.Count > 0;
+                    return matches.Count > 0;
+                }
             }
         }
 
@@ -3086,35 +3190,38 @@ namespace Zenject
         public object InstantiateExplicit(Type concreteType, bool autoInject, InjectArgs args)
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("Zenject.Instantiate({0})", concreteType))
+#if ZEN_MULTITHREADING
+            lock (locker)
 #endif
-            {
-                if (IsValidating)
+                using (ProfileBlock.Start("Zenject.Instantiate({0})", concreteType))
+#endif
                 {
-                    if (_settings.ValidationErrorResponse == ValidationErrorResponses.Throw)
+                    if (IsValidating)
                     {
-                        return InstantiateInternal(concreteType, autoInject, args);
-                    }
-                    else
-                    {
-                        // In this case, just log it and continue to print out multiple validation errors
-                        // at once
-                        try
+                        if (_settings.ValidationErrorResponse == ValidationErrorResponses.Throw)
                         {
                             return InstantiateInternal(concreteType, autoInject, args);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            ModestTree.Log.ErrorException(e);
-                            return new ValidationMarker(concreteType, true);
+                            // In this case, just log it and continue to print out multiple validation errors
+                            // at once
+                            try
+                            {
+                                return InstantiateInternal(concreteType, autoInject, args);
+                            }
+                            catch (Exception e)
+                            {
+                                ModestTree.Log.ErrorException(e);
+                                return new ValidationMarker(concreteType, true);
+                            }
                         }
                     }
+                    else
+                    {
+                        return InstantiateInternal(concreteType, autoInject, args);
+                    }
                 }
-                else
-                {
-                    return InstantiateInternal(concreteType, autoInject, args);
-                }
-            }
         }
 
 #if !NOT_UNITY3D

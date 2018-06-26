@@ -40,6 +40,9 @@ namespace Zenject
         DiContainer _container;
 
         readonly List<SceneDecoratorContext> _decoratorContexts = new List<SceneDecoratorContext>();
+#if ZEN_MULTITHREADING
+        readonly object locker = new object();
+#endif
 
         bool _hasInstalled;
         bool _hasResolved;
@@ -124,17 +127,23 @@ namespace Zenject
             Assert.That(!IsValidating);
 
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("SceneContext.Install"))
+#if ZEN_MULTITHREADING
+            lock (locker)
 #endif
-            {
-                Install();
-            }
+                using (ProfileBlock.Start("SceneContext.Install"))
+#endif
+                {
+                    Install();
+                }
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("SceneContext.Resolve"))
+#if ZEN_MULTITHREADING
+            lock (locker)
 #endif
-            {
-                Resolve();
-            }
+                using (ProfileBlock.Start("SceneContext.Resolve"))
+#endif
+                {
+                    Resolve();
+                }
         }
 
         public override IEnumerable<GameObject> GetRootGameObjects()

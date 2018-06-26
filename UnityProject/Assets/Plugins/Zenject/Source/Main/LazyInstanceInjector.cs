@@ -19,6 +19,9 @@ namespace Zenject
     {
         readonly DiContainer _container;
         readonly HashSet<object> _instancesToInject = new HashSet<object>();
+#if ZEN_MULTITHREADING
+        readonly object locker = new object();
+#endif
 
         public LazyInstanceInjector(DiContainer container)
         {
@@ -51,21 +54,24 @@ namespace Zenject
         public void LazyInjectAll()
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("LazyInstanceInjector.LazyInjectAll"))
+#if ZEN_MULTITHREADING
+            lock (locker)
 #endif
-            {
-                var tempList = new List<object>();
-                while (!_instancesToInject.IsEmpty())
+                using (ProfileBlock.Start("LazyInstanceInjector.LazyInjectAll"))
+#endif
                 {
-                    tempList.Clear();
-                    tempList.AddRange(_instancesToInject);
-                    _instancesToInject.Clear();
-                    foreach (var instance in tempList)
+                    var tempList = new List<object>();
+                    while (!_instancesToInject.IsEmpty())
                     {
-                        _container.Inject(instance);
+                        tempList.Clear();
+                        tempList.AddRange(_instancesToInject);
+                        _instancesToInject.Clear();
+                        foreach (var instance in tempList)
+                        {
+                            _container.Inject(instance);
+                        }
                     }
                 }
-            }
         }
     }
 }

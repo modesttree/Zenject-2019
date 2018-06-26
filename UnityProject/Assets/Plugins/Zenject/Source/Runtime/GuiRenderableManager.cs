@@ -10,6 +10,9 @@ namespace Zenject
     public class GuiRenderableManager
     {
         List<RenderableInfo> _renderables;
+#if ZEN_MULTITHREADING
+        readonly object _locker;
+#endif
 
         public GuiRenderableManager(
             [Inject(Optional = true, Source = InjectSources.Local)]
@@ -50,11 +53,14 @@ namespace Zenject
                 try
                 {
 #if UNITY_EDITOR
-                    using (ProfileBlock.Start("{0}.GuiRender()", renderable.Renderable.GetType()))
+#if ZEN_MULTITHREADING
+                    lock (_locker)
 #endif
-                    {
-                        renderable.Renderable.GuiRender();
-                    }
+                        using (ProfileBlock.Start("{0}.GuiRender()", renderable.Renderable.GetType()))
+#endif
+                        {
+                            renderable.Renderable.GuiRender();
+                        }
                 }
                 catch (Exception e)
                 {

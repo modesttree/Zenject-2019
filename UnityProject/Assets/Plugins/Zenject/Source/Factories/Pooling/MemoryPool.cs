@@ -14,11 +14,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(item);
+                    }
             }
             return item;
         }
@@ -45,11 +48,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param, item);
+                    }
             }
 
             return item;
@@ -77,11 +83,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, item);
+                    }
             }
 
             return item;
@@ -109,11 +118,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, item);
+                    }
             }
             return item;
         }
@@ -140,11 +152,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, param4, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, param4, item);
+                    }
             }
             return item;
         }
@@ -171,11 +186,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, param4, param5, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, param4, param5, item);
+                    }
             }
             return item;
         }
@@ -204,11 +222,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, param4, param5, param6, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, param4, param5, param6, item);
+                    }
             }
             return item;
         }
@@ -237,11 +258,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, param4, param5, param6, param7, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, param4, param5, param6, param7, item);
+                    }
             }
             return item;
         }
@@ -270,11 +294,14 @@ namespace Zenject
             if (!Container.IsValidating)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    Reinitialize(param1, param2, param3, param4, param5, param6, param7, param8, item);
-                }
+                    using (ProfileBlock.Start("{0}.Reinitialize", this.GetType()))
+#endif
+                    {
+                        Reinitialize(param1, param2, param3, param4, param5, param6, param7, param8, item);
+                    }
             }
             return item;
         }
