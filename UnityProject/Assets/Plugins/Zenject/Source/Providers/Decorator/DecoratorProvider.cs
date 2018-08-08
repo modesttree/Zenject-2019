@@ -68,6 +68,20 @@ namespace Zenject.Internal
             var rawInstances = provider.GetAllInstances(context);
             var decoratedInstances = new List<object>(rawInstances.Count);
 
+            if (context.Container.IsValidating)
+            {
+                for (int i = 0; i < rawInstances.Count; i++)
+                {
+                    for (int j = 0; j < _decoratorFactories.Count; j++)
+                    {
+                        decoratedInstances.Add(
+                            _decoratorFactories[j].Create(default(TContract)));
+                    }
+                }
+
+                return decoratedInstances;
+            }
+
             for (int i = 0; i < rawInstances.Count; i++)
             {
                 decoratedInstances.Add(DecorateInstance(
