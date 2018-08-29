@@ -9,6 +9,9 @@ namespace Zenject
     public class PoolableManager
     {
         readonly List<IPoolable> _poolables;
+#if ZEN_MULTITHREADING
+        readonly object _locker = new object();
+#endif
 
         bool _isSpawned;
 
@@ -38,11 +41,14 @@ namespace Zenject
             for (int i = 0; i < _poolables.Count; i++)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.OnSpawned", _poolables[i].GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    _poolables[i].OnSpawned();
-                }
+                    using (ProfileBlock.Start("{0}.OnSpawned", _poolables[i].GetType()))
+#endif
+                    {
+                        _poolables[i].OnSpawned();
+                    }
             }
         }
 
@@ -55,11 +61,14 @@ namespace Zenject
             for (int i = _poolables.Count - 1; i >= 0; i--)
             {
 #if UNITY_EDITOR
-                using (ProfileBlock.Start("{0}.OnDespawned", _poolables[i].GetType()))
+#if ZEN_MULTITHREADING
+                lock (_locker)
 #endif
-                {
-                    _poolables[i].OnDespawned();
-                }
+                    using (ProfileBlock.Start("{0}.OnDespawned", _poolables[i].GetType()))
+#endif
+                    {
+                        _poolables[i].OnDespawned();
+                    }
             }
         }
 

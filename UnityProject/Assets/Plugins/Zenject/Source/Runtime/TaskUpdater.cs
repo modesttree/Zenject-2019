@@ -11,6 +11,9 @@ namespace Zenject
     {
         readonly LinkedList<TaskInfo> _tasks = new LinkedList<TaskInfo>();
         readonly List<TaskInfo> _queuedTasks = new List<TaskInfo>();
+#if ZEN_MULTITHREADING
+        protected readonly object _locker = new object();
+#endif
 
         IEnumerable<TaskInfo> AllTasks
         {
@@ -149,11 +152,14 @@ namespace Zenject
         protected override void UpdateItem(ITickable task)
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("{0}.Tick()", task.GetType()))
+#if ZEN_MULTITHREADING
+            lock (_locker)
 #endif
-            {
-                task.Tick();
-            }
+                using (ProfileBlock.Start("{0}.Tick()", task.GetType()))
+#endif
+                {
+                    task.Tick();
+                }
         }
     }
 
@@ -162,11 +168,14 @@ namespace Zenject
         protected override void UpdateItem(ILateTickable task)
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("{0}.LateTick()", task.GetType()))
+#if ZEN_MULTITHREADING
+            lock (_locker)
 #endif
-            {
-                task.LateTick();
-            }
+                using (ProfileBlock.Start("{0}.LateTick()", task.GetType()))
+#endif
+                {
+                    task.LateTick();
+                }
         }
     }
 
@@ -175,11 +184,14 @@ namespace Zenject
         protected override void UpdateItem(IFixedTickable task)
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("{0}.FixedTick()", task.GetType()))
+#if ZEN_MULTITHREADING
+            lock (_locker)
 #endif
-            {
-                task.FixedTick();
-            }
+                using (ProfileBlock.Start("{0}.FixedTick()", task.GetType()))
+#endif
+                {
+                    task.FixedTick();
+                }
         }
     }
 }

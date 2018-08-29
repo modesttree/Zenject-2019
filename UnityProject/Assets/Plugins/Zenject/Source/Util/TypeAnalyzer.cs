@@ -9,6 +9,9 @@ namespace Zenject
     public static class TypeAnalyzer
     {
         static Dictionary<Type, ZenjectTypeInfo> _typeInfo = new Dictionary<Type, ZenjectTypeInfo>();
+#if ZEN_MULTITHREADING
+        static readonly object _locker = new object();
+#endif
 
 #if UNITY_EDITOR
         // We store this separately from ZenjectTypeInfo because this flag is needed for contract
@@ -72,27 +75,30 @@ namespace Zenject
         public static ZenjectTypeInfo GetInfo(Type type)
         {
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("Zenject Reflection"))
-#endif
-            {
-                Assert.That(!type.IsAbstract(),
-                    "Tried to analyze abstract type '{0}'.  This is not currently allowed.", type);
-
-                ZenjectTypeInfo info;
-
 #if ZEN_MULTITHREADING
-                lock (_typeInfo)
+            lock (_locker)
+#endif
+                using (ProfileBlock.Start("Zenject Reflection"))
 #endif
                 {
-                    if (!_typeInfo.TryGetValue(type, out info))
-                    {
-                        info = CreateTypeInfo(type);
-                        _typeInfo.Add(type, info);
-                    }
-                }
+                    Assert.That(!type.IsAbstract(),
+                        "Tried to analyze abstract type '{0}'.  This is not currently allowed.", type);
 
-                return info;
-            }
+                    ZenjectTypeInfo info;
+
+#if ZEN_MULTITHREADING
+                    lock (_typeInfo)
+#endif
+                    {
+                        if (!_typeInfo.TryGetValue(type, out info))
+                        {
+                            info = CreateTypeInfo(type);
+                            _typeInfo.Add(type, info);
+                        }
+                    }
+
+                    return info;
+                }
         }
 
         static ZenjectTypeInfo CreateTypeInfo(Type type)

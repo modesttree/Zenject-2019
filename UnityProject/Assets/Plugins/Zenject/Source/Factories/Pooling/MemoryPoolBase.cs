@@ -44,6 +44,9 @@ namespace Zenject
         IFactory<TContract> _factory;
         MemoryPoolSettings _settings;
         DiContainer _container;
+#if ZEN_MULTITHREADING
+        protected readonly object _locker = new object();
+#endif
 
         int _activeCount;
 
@@ -121,11 +124,14 @@ namespace Zenject
             _inactiveItems.Push(item);
 
 #if UNITY_EDITOR
-            using (ProfileBlock.Start("{0}.OnDespawned", this.GetType()))
+#if ZEN_MULTITHREADING
+            lock (_locker)
 #endif
-            {
-                OnDespawned(item);
-            }
+                using (ProfileBlock.Start("{0}.OnDespawned", this.GetType()))
+#endif
+                {
+                    OnDespawned(item);
+                }
 
             if (_inactiveItems.Count > _settings.MaxSize)
             {

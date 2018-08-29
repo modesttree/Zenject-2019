@@ -8,6 +8,10 @@ namespace ModestTree
 {
     public static class LinqExtensions
     {
+#if ZEN_MULTITHREADING
+        private static readonly object locker = new object();
+#endif
+
         // Inclusive because it includes the item that meets the predicate
         public static IEnumerable<TSource> TakeUntilInclusive<TSource>(
             this IEnumerable<TSource> source, Func<TSource, bool> predicate)
@@ -242,23 +246,28 @@ namespace ModestTree
         public static IEnumerable<T> Zipper<A, B, T>(
             this IEnumerable<A> seqA, IEnumerable<B> seqB, Func<A, B, T> func)
         {
-            using (var iteratorA = seqA.GetEnumerator())
-            using (var iteratorB = seqB.GetEnumerator())
+#if ZEN_MULTITHREADING
+            lock (locker)
+#endif
             {
-                while (true)
+                using (var iteratorA = seqA.GetEnumerator())
+                using (var iteratorB = seqB.GetEnumerator())
                 {
-                    bool isDoneA = !iteratorA.MoveNext();
-                    bool isDoneB = !iteratorB.MoveNext();
-
-                    Assert.That(isDoneA == isDoneB,
-                        "Given collections have different length in Zip operator");
-
-                    if (isDoneA || isDoneB)
+                    while (true)
                     {
-                        break;
-                    }
+                        bool isDoneA = !iteratorA.MoveNext();
+                        bool isDoneB = !iteratorB.MoveNext();
 
-                    yield return func(iteratorA.Current, iteratorB.Current);
+                        Assert.That(isDoneA == isDoneB,
+                            "Given collections have different length in Zip operator");
+
+                        if (isDoneA || isDoneB)
+                        {
+                            break;
+                        }
+
+                        yield return func(iteratorA.Current, iteratorB.Current);
+                    }
                 }
             }
         }
