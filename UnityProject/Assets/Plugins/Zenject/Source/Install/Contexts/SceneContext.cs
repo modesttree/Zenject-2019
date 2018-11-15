@@ -8,15 +8,17 @@ using ModestTree.Util;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Zenject.Internal;
+using UnityEngine.Events;
 
 namespace Zenject
 {
     public class SceneContext : RunnableContext
     {
-        public event Action PreInstall;
-        public event Action PostInstall;
-        public event Action PreResolve;
-        public event Action PostResolve;
+        public UnityEvent PreInstall;
+        public UnityEvent PostInstall;
+        public UnityEvent PreResolve;
+        public UnityEvent PostResolve;
+        
 
         public static Action<DiContainer> ExtraBindingsInstallMethod;
         public static Action<DiContainer> ExtraBindingsLateInstallMethod;
@@ -225,9 +227,10 @@ namespace Zenject
             // Do this after creating DiContainer in case it's needed by the pre install logic
             if (PreInstall != null)
             {
-                PreInstall();
+                PreInstall.Invoke();
             }
 
+            
             Assert.That(_decoratorContexts.IsEmpty());
             _decoratorContexts.AddRange(LookupDecoratorContexts());
 
@@ -270,7 +273,7 @@ namespace Zenject
 
             if (PostInstall != null)
             {
-                PostInstall();
+                PostInstall.Invoke();
             }
         }
 
@@ -278,7 +281,7 @@ namespace Zenject
         {
             if (PreResolve != null)
             {
-                PreResolve();
+                PreResolve.Invoke();
             }
 
             Assert.That(_hasInstalled);
@@ -289,7 +292,7 @@ namespace Zenject
 
             if (PostResolve != null)
             {
-                PostResolve();
+                PostResolve.Invoke();
             }
         }
 
