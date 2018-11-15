@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Injection
 {
@@ -18,13 +13,13 @@ namespace Zenject.Tests.Injection
         class Test2
         {
             [Inject]
-            public Test1 val1 = null;
+            public Test1 val1;
         }
 
         class Test3
         {
             [InjectOptional]
-            public Test1 val1 = null;
+            public Test1 val1;
         }
 
         class Test0

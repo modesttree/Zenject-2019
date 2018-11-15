@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -16,7 +11,7 @@ namespace Zenject.Tests.Bindings
         [Test]
         public void TestSelf()
         {
-            Container.BindFactory<Foo, Foo.Factory>().FromFactory<CustomFooFactory>().NonLazy();
+            Container.BindFactory<Foo, Foo.Factory>().FromIFactory(b => b.To<CustomFooFactory>().AsCached()).NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo.Factory>().Create(), StaticFoo);
         }
@@ -25,7 +20,7 @@ namespace Zenject.Tests.Bindings
         public void TestConcrete()
         {
             Container.BindFactory<IFoo, IFooFactory>()
-                .To<Foo>().FromFactory<CustomFooFactory>().NonLazy();
+                .To<Foo>().FromIFactory(b => b.To<CustomFooFactory>().AsCached()).NonLazy();
 
             Assert.IsEqual(Container.Resolve<IFooFactory>().Create(), StaticFoo);
         }
@@ -34,7 +29,7 @@ namespace Zenject.Tests.Bindings
         public void TestFactoryValidation()
         {
             Container.BindFactory<IFoo, IFooFactory>()
-                .To<Foo>().FromFactory<CustomFooFactoryWithValidate>().NonLazy();
+                .To<Foo>().FromIFactory(b => b.To<CustomFooFactoryWithValidate>().AsCached()).NonLazy();
 
             Container.Resolve<IFooFactory>().Create();
         }
@@ -64,13 +59,13 @@ namespace Zenject.Tests.Bindings
         {
         }
 
-        class IFooFactory : Factory<IFoo>
+        class IFooFactory : PlaceholderFactory<IFoo>
         {
         }
 
         class Foo : IFoo
         {
-            public class Factory : Factory<Foo>
+            public class Factory : PlaceholderFactory<Foo>
             {
             }
         }

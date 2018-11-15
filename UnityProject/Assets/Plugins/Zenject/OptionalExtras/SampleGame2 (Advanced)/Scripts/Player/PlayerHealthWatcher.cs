@@ -1,28 +1,27 @@
 using System;
 using UnityEngine;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
     public class PlayerHealthWatcher : ITickable
     {
-        readonly PlayerDiedSignal _playerDiedSignal;
-        readonly IAudioPlayer _audioPlayer;
+        readonly SignalBus _signalBus;
+        readonly AudioPlayer _audioPlayer;
         readonly Settings _settings;
-        readonly Explosion.Pool _explosionPool;
+        readonly Explosion.Factory _explosionFactory;
         readonly Player _player;
 
         public PlayerHealthWatcher(
             Player player,
-            Explosion.Pool explosionPool,
+            Explosion.Factory explosionFactory,
             Settings settings,
-            IAudioPlayer audioPlayer,
-            PlayerDiedSignal playerDiedSignal)
+            AudioPlayer audioPlayer,
+            SignalBus signalBus)
         {
-            _playerDiedSignal = playerDiedSignal;
+            _signalBus = signalBus;
             _audioPlayer = audioPlayer;
             _settings = settings;
-            _explosionPool = explosionPool;
+            _explosionFactory = explosionFactory;
             _player = player;
         }
 
@@ -38,12 +37,12 @@ namespace Zenject.SpaceFighter
         {
             _player.IsDead = true;
 
-            var explosion = _explosionPool.Spawn();
+            var explosion = _explosionFactory.Create();
             explosion.transform.position = _player.Position;
 
             _player.Renderer.enabled = false;
 
-            _playerDiedSignal.Fire();
+            _signalBus.Fire<PlayerDiedSignal>();
 
             _audioPlayer.Play(_settings.DeathSound, _settings.DeathSoundVolume);
         }

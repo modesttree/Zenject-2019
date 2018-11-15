@@ -1,18 +1,8 @@
 ﻿using UnityEngine;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
-    public interface IPlayer
-    {
-        bool IsDead { get; }
-        Vector3 Position { get; }
-        Quaternion Rotation { get; }
-
-        void TakeDamage(Vector3 moveDirection);
-    }
-
-    public class PlayerFacade : MonoBehaviour, IPlayer
+    public class PlayerFacade : MonoBehaviour
     {
         Player _model;
         PlayerDamageHandler _hitHandler;

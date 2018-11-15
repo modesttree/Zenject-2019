@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Mono.Cecil.settings" />
+  <PropertyGroup>
+    <ProjectGuid>{8559DD7F-A16F-46D0-A05A-9139FAEBA8FD}</ProjectGuid>
+    <RootNamespace>Zenject.ReflectionBaking.Mono.Cecil.Mdb</RootNamespace>
+    <AssemblyName>Zenject.ReflectionBaking.Mono.Cecil.Mdb</AssemblyName>
+    <DefineConstants>$(DefineConstants);CECIL</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkVersion)' != 'v2.0' ">
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Zenject.ReflectionBaking.Mono.Cecil.csproj">
+      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\ProjectInfo.cs" />
+    <Compile Include="Mono.Cecil.Mdb\AssemblyInfo.cs" />
+    <Compile Include="Mono.Cecil.Mdb\MdbReader.cs" />
+    <Compile Include="Mono.Cecil.Mdb\MdbWriter.cs" />
+    <Compile Include="Mono.CompilerServices.SymbolWriter\MonoSymbolFile.cs" />
+    <Compile Include="Mono.CompilerServices.SymbolWriter\MonoSymbolTable.cs" />
+    <Compile Include="Mono.CompilerServices.SymbolWriter\MonoSymbolWriter.cs" />
+    <Compile Include="Mono.CompilerServices.SymbolWriter\SourceMethodBuilder.cs" />
+    <Compile Include="Mono.CompilerServices.SymbolWriter\SymbolWriterImpl.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

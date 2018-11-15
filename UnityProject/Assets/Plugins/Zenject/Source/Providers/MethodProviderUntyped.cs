@@ -4,6 +4,7 @@ using ModestTree;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class MethodProviderUntyped : IProvider
     {
         readonly DiContainer _container;
@@ -17,19 +18,31 @@ namespace Zenject
             _method = method;
         }
 
+        public bool IsCached
+        {
+            get { return false; }
+        }
+
+        public bool TypeVariesBasedOnMemberType
+        {
+            get { return false; }
+        }
+
         public Type GetInstanceType(InjectContext context)
         {
             return context.MemberType;
         }
 
-        public IEnumerator<List<object>> GetAllInstancesWithInjectSplit(InjectContext context, List<TypeValuePair> args)
+        public void GetAllInstancesWithInjectSplit(
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
         {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
-            if (_container.IsValidating && !DiContainer.CanCreateOrInjectDuringValidation(context.MemberType))
+            injectAction = null;
+            if (_container.IsValidating && !TypeAnalyzer.ShouldAllowDuringValidation(context.MemberType))
             {
-                yield return new List<object>() { new ValidationMarker(context.MemberType) };
+                buffer.Add(new ValidationMarker(context.MemberType));
             }
             else
             {
@@ -37,17 +50,15 @@ namespace Zenject
 
                 if (result == null)
                 {
-#if !UNITY_WSA
-                    Assert.That(context.MemberType.IsPrimitive,
+                    Assert.That(!context.MemberType.IsPrimitive(),
                         "Invalid value returned from FromMethod.  Expected non-null.");
-#endif
                 }
                 else
                 {
                     Assert.That(result.GetType().DerivesFromOrEqual(context.MemberType));
                 }
 
-                yield return new List<object>() { result };
+                buffer.Add(result);
             }
         }
     }

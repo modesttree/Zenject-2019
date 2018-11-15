@@ -1,32 +1,30 @@
 using System;
 using ModestTree;
-using ModestTree.Util;
 using UnityEngine;
-using Zenject;
 using Random = UnityEngine.Random;
 
 namespace Zenject.SpaceFighter
 {
     public class EnemySpawner : ITickable, IInitializable
     {
+        readonly EnemyFacade.Factory _enemyFactory;
+        readonly SignalBus _signalBus;
         readonly LevelBoundary _levelBoundary;
-        readonly EnemyFacade.Pool _enemyFactory;
         readonly Settings _settings;
 
-        EnemyKilledSignal _enemyKilledSignal;
         float _desiredNumEnemies;
         int _enemyCount;
         float _lastSpawnTime;
 
         public EnemySpawner(
             Settings settings,
-            EnemyFacade.Pool enemyFactory,
             LevelBoundary levelBoundary,
-            EnemyKilledSignal enemyKilledSignal)
+            SignalBus signalBus,
+            EnemyFacade.Factory enemyFactory)
         {
-            _enemyKilledSignal = enemyKilledSignal;
-            _levelBoundary = levelBoundary;
             _enemyFactory = enemyFactory;
+            _signalBus = signalBus;
+            _levelBoundary = levelBoundary;
             _settings = settings;
 
             _desiredNumEnemies = settings.NumEnemiesStartAmount;
@@ -34,7 +32,7 @@ namespace Zenject.SpaceFighter
 
         public void Initialize()
         {
-            _enemyKilledSignal += OnEnemyKilled;
+            _signalBus.Subscribe<EnemyKilledSignal>(OnEnemyKilled);
         }
 
         void OnEnemyKilled()
@@ -59,7 +57,7 @@ namespace Zenject.SpaceFighter
             float speed = Random.Range(_settings.SpeedMin, _settings.SpeedMax);
             float accuracy = Random.Range(_settings.AccuracyMin, _settings.AccuracyMax);
 
-            var enemyFacade = _enemyFactory.Spawn(accuracy, speed);
+            var enemyFacade = _enemyFactory.Create(accuracy, speed);
             enemyFacade.Position = ChooseRandomStartPosition();
 
             _lastSpawnTime = Time.realtimeSinceStartup;

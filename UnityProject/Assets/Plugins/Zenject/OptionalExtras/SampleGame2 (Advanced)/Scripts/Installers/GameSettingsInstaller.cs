@@ -1,7 +1,4 @@
 using System;
-using UnityEngine;
-using System.Collections;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
@@ -52,21 +49,22 @@ namespace Zenject.SpaceFighter
 
         public override void InstallBindings()
         {
-            Container.BindInstance(EnemySpawner);
-            Container.BindInstance(GameRestartHandler);
-            Container.BindInstance(GameInstaller);
+            // Use IfNotBound to allow overriding for eg. from play mode tests
+            Container.BindInstance(EnemySpawner).IfNotBound();
+            Container.BindInstance(GameRestartHandler).IfNotBound();
+            Container.BindInstance(GameInstaller).IfNotBound();
 
-            Container.BindInstance(Player.PlayerMoveHandler);
-            Container.BindInstance(Player.PlayerShootHandler);
-            Container.BindInstance(Player.PlayerCollisionHandler);
-            Container.BindInstance(Player.PlayerHealthWatcher);
+            Container.BindInstance(Player.PlayerMoveHandler).IfNotBound();
+            Container.BindInstance(Player.PlayerShootHandler).IfNotBound();
+            Container.BindInstance(Player.PlayerCollisionHandler).IfNotBound();
+            Container.BindInstance(Player.PlayerHealthWatcher).IfNotBound();
 
-            Container.BindInstance(Enemy.EnemyStateIdle);
-            Container.BindInstance(Enemy.EnemyRotationHandler);
-            Container.BindInstance(Enemy.EnemyStateFollow);
-            Container.BindInstance(Enemy.EnemyStateAttack);
-            Container.BindInstance(Enemy.EnemyHealthWatcher);
-            Container.BindInstance(Enemy.EnemyCommonSettings);
+            Container.BindInstance(Enemy.EnemyStateIdle).IfNotBound();
+            Container.BindInstance(Enemy.EnemyRotationHandler).IfNotBound();
+            Container.BindInstance(Enemy.EnemyStateFollow).IfNotBound();
+            Container.BindInstance(Enemy.EnemyStateAttack).IfNotBound();
+            Container.BindInstance(Enemy.EnemyHealthWatcher).IfNotBound();
+            Container.BindInstance(Enemy.EnemyCommonSettings).IfNotBound();
         }
     }
 }

@@ -1,5 +1,5 @@
 using NUnit.Framework;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -11,7 +11,7 @@ namespace Zenject.Tests.Bindings
         {
             Container.Bind<Foo>().AsSingle().NonLazy();
 
-            Assert.Throws(() => Container.ResolveDependencyRoots());
+            Assert.Throws(() => Container.ResolveRoots());
         }
 
         [Test]
@@ -19,7 +19,7 @@ namespace Zenject.Tests.Bindings
         {
             Container.Bind<Foo>().AsSingle();
 
-            Container.ResolveDependencyRoots();
+            Container.ResolveRoots();
         }
 
         [Test]
@@ -28,7 +28,7 @@ namespace Zenject.Tests.Bindings
             Container.Bind<Foo>().AsSingle().NonLazy();
             Container.Bind<Bar>().AsSingle();
 
-            Container.ResolveDependencyRoots();
+            Container.ResolveRoots();
         }
 
         public class Foo

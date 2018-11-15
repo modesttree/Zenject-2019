@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
-using NUnit.Framework;
 using System.Linq;
 using ModestTree;
-using Assert=ModestTree.Assert;
+using NUnit.Framework;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -14,13 +11,81 @@ namespace Zenject.Tests.Bindings
         static Foo StaticFoo = new Foo();
 
         [Test]
-        public void TestSelfSingle()
+        public void Test1()
         {
             FooFactory.InstanceCount = 0;
 
-            Container.Bind<Foo>().FromFactory<FooFactory>().AsSingle().NonLazy();
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached());
 
             Assert.IsEqual(Container.Resolve<Foo>(), StaticFoo);
+
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+
+            Assert.IsEqual(FooFactory.InstanceCount, 1);
+        }
+
+        [Test]
+        public void TestOldVersion()
+        {
+            FooFactory.InstanceCount = 0;
+
+            Container.Bind<Foo>().FromFactory<FooFactory>();
+
+            Assert.IsEqual(Container.Resolve<Foo>(), StaticFoo);
+
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+
+            Assert.IsEqual(FooFactory.InstanceCount, 1);
+        }
+
+        [Test]
+        public void TestMoveIntoSubcontainers()
+        {
+            FooFactory.InstanceCount = 0;
+
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).MoveIntoDirectSubContainers();
+
+            Assert.That(Container.AllContracts.Where(x => x.Type == typeof(IFactory<Foo>)).IsEmpty());
+
+            Assert.IsNull(Container.TryResolve<Foo>());
+
+            var subContainer = Container.CreateSubContainer();
+
+            Assert.IsEqual(subContainer.Resolve<Foo>(), StaticFoo);
+
+            Assert.That(subContainer.AllContracts.Where(x => x.Type == typeof(IFactory<Foo>)).Count() == 1);
+
+            subContainer.Resolve<Foo>();
+            subContainer.Resolve<Foo>();
+            subContainer.Resolve<Foo>();
+
+            Assert.IsEqual(FooFactory.InstanceCount, 1);
+        }
+
+        [Test]
+        public void Test2()
+        {
+            FooFactory.InstanceCount = 0;
+
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsTransient());
+
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+            Container.Resolve<Foo>();
+
+            Assert.IsEqual(FooFactory.InstanceCount, 3);
+        }
+
+        [Test]
+        public void Test3()
+        {
+            FooFactory.InstanceCount = 0;
+
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsTransient()).AsCached();
 
             Container.Resolve<Foo>();
             Container.Resolve<Foo>();
@@ -34,7 +99,7 @@ namespace Zenject.Tests.Bindings
         {
             FooFactory.InstanceCount = 0;
 
-            Container.Bind<IFoo>().To<Foo>().FromFactory<FooFactory>().AsSingle().NonLazy();
+            Container.Bind<IFoo>().To<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<IFoo>(), StaticFoo);
 
@@ -50,8 +115,8 @@ namespace Zenject.Tests.Bindings
         {
             FooFactory.InstanceCount = 0;
 
-            Container.Bind<Foo>().FromFactory<FooFactory>().AsSingle().NonLazy();
-            Container.Bind<IFoo>().To<Foo>().FromFactory<FooFactory>().AsSingle().NonLazy();
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
+            Container.Bind<IFoo>().To<Foo>().FromResolve();
 
             Assert.IsEqual(Container.Resolve<IFoo>(), StaticFoo);
             Assert.IsEqual(Container.Resolve<Foo>(), StaticFoo);
@@ -68,7 +133,7 @@ namespace Zenject.Tests.Bindings
         {
             FooFactory.InstanceCount = 0;
 
-            Container.Bind<Foo>().FromFactory<FooFactory>().AsCached().NonLazy();
+            Container.Bind<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), StaticFoo);
 
@@ -84,7 +149,7 @@ namespace Zenject.Tests.Bindings
         {
             FooFactory.InstanceCount = 0;
 
-            Container.Bind<IFoo>().To<Foo>().FromFactory<FooFactory>().AsCached().NonLazy();
+            Container.Bind<IFoo>().To<Foo>().FromIFactory(b => b.To<FooFactory>().AsCached()).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<IFoo>(), StaticFoo);
 
@@ -97,7 +162,7 @@ namespace Zenject.Tests.Bindings
 
         class FooFactory : IFactory<Foo>
         {
-            public static int InstanceCount = 0;
+            public static int InstanceCount;
 
             public FooFactory()
             {

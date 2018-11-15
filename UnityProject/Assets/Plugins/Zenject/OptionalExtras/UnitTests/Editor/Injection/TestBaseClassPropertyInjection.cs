@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Injection
 {
@@ -20,7 +16,7 @@ namespace Zenject.Tests.Injection
 
         class Test1 : Test3
         {
-            [Inject] protected Test0 val = null;
+            [Inject] protected Test0 val;
 
             public Test0 GetVal()
             {

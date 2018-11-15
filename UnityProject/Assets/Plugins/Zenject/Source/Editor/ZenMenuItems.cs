@@ -1,15 +1,12 @@
 #if !NOT_UNITY3D
 
-using System;
 using System.IO;
-using UnityEditor;
-using UnityEngine;
 using ModestTree;
+using UnityEditor;
 using UnityEditor.SceneManagement;
-using System.Linq;
-using UnityEngine.SceneManagement;
+using UnityEngine;
 
-namespace Zenject
+namespace Zenject.Internal
 {
     public static class ZenMenuItems
     {
@@ -33,7 +30,7 @@ namespace Zenject
         [MenuItem("Edit/Zenject/Help...")]
         public static void OpenDocumentation()
         {
-            Application.OpenURL("https://github.com/modesttree/zenject");
+            Application.OpenURL("https://github.com/svermeulen/zenject");
         }
 
         [MenuItem("GameObject/Zenject/Scene Context", false, 9)]
@@ -76,10 +73,28 @@ namespace Zenject
             CreateProjectContextInternal("Assets/Resources");
         }
 
+        [MenuItem("Assets/Create/Zenject/Default Scene Contract Config", false, 80)]
+        public static void CreateDefaultSceneContractConfig()
+        {
+            var folderPath = ZenUnityEditorUtil.GetCurrentDirectoryAssetPathFromSelection();
+
+            if (!folderPath.EndsWith("/Resources"))
+            {
+                EditorUtility.DisplayDialog("Error",
+                    "ZenjectDefaultSceneContractConfig objects must be placed directly underneath a folder named 'Resources'.  Please try again.", "Ok");
+                return;
+            }
+
+            var config = ScriptableObject.CreateInstance<DefaultSceneContractConfig>();
+
+            ZenUnityEditorUtil.SaveScriptableObjectAsset(
+                Path.Combine(folderPath, DefaultSceneContractConfig.ResourcePath + ".asset"), config);
+        }
+
         [MenuItem("Assets/Create/Zenject/Scriptable Object Installer", false, 1)]
         public static void CreateScriptableObjectInstaller()
         {
-            AddCSharpClassTemplate("Scriptable Object Installer", "UntitledInstaller", false,
+            AddCSharpClassTemplate("Scriptable Object Installer", "UntitledInstaller",
                   "using UnityEngine;"
                 + "\nusing Zenject;"
                 + "\n"
@@ -95,11 +110,11 @@ namespace Zenject
         [MenuItem("Assets/Create/Zenject/Mono Installer", false, 1)]
         public static void CreateMonoInstaller()
         {
-            AddCSharpClassTemplate("Mono Installer", "UntitledInstaller", false,
+            AddCSharpClassTemplate("Mono Installer", "UntitledInstaller",
                   "using UnityEngine;"
                 + "\nusing Zenject;"
                 + "\n"
-                + "\npublic class CLASS_NAME : MonoInstaller<CLASS_NAME>"
+                + "\npublic class CLASS_NAME : MonoInstaller"
                 + "\n{"
                 + "\n    public override void InstallBindings()"
                 + "\n    {"
@@ -110,7 +125,7 @@ namespace Zenject
         [MenuItem("Assets/Create/Zenject/Installer", false, 1)]
         public static void CreateInstaller()
         {
-            AddCSharpClassTemplate("Installer", "UntitledInstaller", false,
+            AddCSharpClassTemplate("Installer", "UntitledInstaller",
                   "using UnityEngine;"
                 + "\nusing Zenject;"
                 + "\n"
@@ -125,7 +140,7 @@ namespace Zenject
         [MenuItem("Assets/Create/Zenject/Editor Window", false, 20)]
         public static void CreateEditorWindow()
         {
-            AddCSharpClassTemplate("Editor Window", "UntitledEditorWindow", true,
+            AddCSharpClassTemplate("Editor Window", "UntitledEditorWindow",
                   "using UnityEngine;"
                 + "\nusing UnityEditor;"
                 + "\nusing Zenject;"
@@ -143,52 +158,6 @@ namespace Zenject
                 + "\n    public override void InstallBindings()"
                 + "\n    {"
                 + "\n        // TODO"
-                + "\n    }"
-                + "\n}");
-        }
-
-        [MenuItem("Assets/Create/Zenject/Unit Test", false, 60)]
-        public static void CreateUnitTest()
-        {
-            AddCSharpClassTemplate("Unit Test", "UntitledUnitTest", true,
-                  "using Zenject;"
-                + "\nusing NUnit.Framework;"
-                + "\n"
-                + "\n[TestFixture]"
-                + "\npublic class CLASS_NAME : ZenjectUnitTestFixture"
-                + "\n{"
-                + "\n    [Test]"
-                + "\n    public void RunTest1()"
-                + "\n    {"
-                + "\n        // TODO"
-                + "\n    }"
-                + "\n}");
-        }
-
-        [MenuItem("Assets/Create/Zenject/Integration Test", false, 60)]
-        public static void CreateIntegrationTest()
-        {
-            AddCSharpClassTemplate("Integration Test", "UntitledIntegrationTest", false,
-                  "using Zenject;"
-                + "\nusing System.Collections;"
-                + "\nusing UnityEngine.TestTools;"
-                + "\n"
-                + "\npublic class CLASS_NAME : ZenjectIntegrationTestFixture"
-                + "\n{"
-                + "\n    [UnityTest]"
-                + "\n    public IEnumerator RunTest1()"
-                + "\n    {"
-                + "\n        // Setup initial state by creating game objects from scratch, loading prefabs/scenes, etc"
-                + "\n"
-                + "\n        PreInstall();"
-                + "\n"
-                + "\n        // Call Container.Bind methods"
-                + "\n"
-                + "\n        PostInstall();"
-                + "\n"
-                + "\n        // Add test assertions for expected state"
-                + "\n        // Using Container.Resolve or [Inject] fields"
-                + "\n        yield break;"
                 + "\n    }"
                 + "\n}");
         }
@@ -243,18 +212,17 @@ namespace Zenject
             Debug.Log("Created new ProjectContext at '{0}'".Fmt(prefabPath));
         }
 
-        static void AddCSharpClassTemplate(
-            string friendlyName, string defaultFileName, bool editorOnly, string templateStr)
+        public static string AddCSharpClassTemplate(
+            string friendlyName, string defaultFileName, string templateStr)
         {
-            var folderPath = ZenUnityEditorUtil.GetCurrentDirectoryAssetPathFromSelection();
+            return AddCSharpClassTemplate(
+                friendlyName, defaultFileName, templateStr, ZenUnityEditorUtil.GetCurrentDirectoryAssetPathFromSelection());
+        }
 
-            if (editorOnly && !folderPath.Contains("/Editor"))
-            {
-                EditorUtility.DisplayDialog("Error",
-                    "Editor window classes must have a parent folder above them named 'Editor'.  Please create or find an Editor folder and try again", "Ok");
-                return;
-            }
-
+        public static string AddCSharpClassTemplate(
+            string friendlyName, string defaultFileName,
+            string templateStr, string folderPath)
+        {
             var absolutePath = EditorUtility.SaveFilePanel(
                 "Choose name for " + friendlyName,
                 folderPath,
@@ -264,7 +232,7 @@ namespace Zenject
             if (absolutePath == "")
             {
                 // Dialog was cancelled
-                return;
+                return null;
             }
 
             if (!absolutePath.ToLower().EndsWith(".cs"))
@@ -281,53 +249,99 @@ namespace Zenject
 
             EditorUtility.FocusProjectWindow();
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
+
+            return assetPath;
         }
 
         [MenuItem("Edit/Zenject/Validate All Active Scenes")]
         public static void ValidateAllActiveScenes()
         {
-            ValidateWrapper(() =>
+            ZenUnityEditorUtil.SaveThenRunPreserveSceneSetup(() =>
                 {
                     var numValidated = ZenUnityEditorUtil.ValidateAllActiveScenes();
-                    ModestTree.Log.Info("Validated all '{0}' active scenes successfully", numValidated);
+                    Log.Info("Validated all '{0}' active scenes successfully", numValidated);
                 });
-        }
-
-        static bool ValidateWrapper(Action action)
-        {
-            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                var originalSceneSetup = EditorSceneManager.GetSceneManagerSetup();
-
-                try
-                {
-                    action();
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    ModestTree.Log.ErrorException(e);
-                    return false;
-                }
-                finally
-                {
-                    EditorSceneManager.RestoreSceneManagerSetup(originalSceneSetup);
-                }
-            }
-            else
-            {
-                Debug.Log("Validation cancelled - All scenes must be saved first for validation to take place");
-                return false;
-            }
         }
 
         static bool ValidateCurrentSceneInternal()
         {
-            return ValidateWrapper(() =>
+            return ZenUnityEditorUtil.SaveThenRunPreserveSceneSetup(() =>
                 {
+                    SceneParentAutomaticLoader.ValidateMultiSceneSetupAndLoadDefaultSceneParents();
                     ZenUnityEditorUtil.ValidateCurrentSceneSetup();
-                    ModestTree.Log.Info("All scenes validated successfully");
+                    Log.Info("All scenes validated successfully");
                 });
+        }
+
+        [MenuItem("Assets/Create/Zenject/Unit Test", false, 60)]
+        public static void CreateUnitTest()
+        {
+            AddCSharpClassTemplate("Unit Test", "UntitledUnitTest",
+                  "using Zenject;"
+                + "\nusing NUnit.Framework;"
+                + "\n"
+                + "\n[TestFixture]"
+                + "\npublic class CLASS_NAME : ZenjectUnitTestFixture"
+                + "\n{"
+                + "\n    [Test]"
+                + "\n    public void RunTest1()"
+                + "\n    {"
+                + "\n        // TODO"
+                + "\n    }"
+                + "\n}");
+        }
+
+        [MenuItem("Assets/Create/Zenject/Integration Test", false, 60)]
+        public static void CreateIntegrationTest()
+        {
+            AddCSharpClassTemplate("Integration Test", "UntitledIntegrationTest",
+                  "using Zenject;"
+                + "\nusing System.Collections;"
+                + "\nusing UnityEngine.TestTools;"
+                + "\n"
+                + "\npublic class CLASS_NAME : ZenjectIntegrationTestFixture"
+                + "\n{"
+                + "\n    [UnityTest]"
+                + "\n    public IEnumerator RunTest1()"
+                + "\n    {"
+                + "\n        // Setup initial state by creating game objects from scratch, loading prefabs/scenes, etc"
+                + "\n"
+                + "\n        PreInstall();"
+                + "\n"
+                + "\n        // Call Container.Bind methods"
+                + "\n"
+                + "\n        PostInstall();"
+                + "\n"
+                + "\n        // Add test assertions for expected state"
+                + "\n        // Using Container.Resolve or [Inject] fields"
+                + "\n        yield break;"
+                + "\n    }"
+                + "\n}");
+        }
+
+        [MenuItem("Assets/Create/Zenject/Scene Test", false, 60)]
+        public static void CreateSceneTest()
+        {
+            AddCSharpClassTemplate("Scene Test Fixture", "UntitledSceneTest",
+                  "using Zenject;"
+                + "\nusing System.Collections;"
+                + "\nusing UnityEngine;"
+                + "\nusing UnityEngine.TestTools;"
+                + "\n"
+                + "\npublic class CLASS_NAME : SceneTestFixture"
+                + "\n{"
+                + "\n    [UnityTest]"
+                + "\n    public IEnumerator TestScene()"
+                + "\n    {"
+                + "\n        yield return LoadScene(\"InsertSceneNameHere\");"
+                + "\n"
+                + "\n        // TODO: Add assertions here now that the scene has started"
+                + "\n        // Or you can just uncomment to simply wait some time to make sure the scene plays without errors"
+                + "\n        //yield return new WaitForSeconds(1.0f);"
+                + "\n"
+                + "\n        // Note that you can use SceneContainer.Resolve to look up objects that you need for assertions"
+                + "\n    }"
+                + "\n}");
         }
     }
 }

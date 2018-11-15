@@ -1,34 +1,33 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
     public class GameRestartHandler : IInitializable, IDisposable, ITickable
     {
+        readonly SignalBus _signalBus;
         readonly Settings _settings;
 
-        PlayerDiedSignal _playerDiedSignal;
         bool _isDelaying;
         float _delayStartTime;
 
         public GameRestartHandler(
             Settings settings,
-            PlayerDiedSignal playerDiedSignal)
+            SignalBus signalBus)
         {
-            _playerDiedSignal = playerDiedSignal;
+            _signalBus = signalBus;
             _settings = settings;
         }
 
         public void Initialize()
         {
-            _playerDiedSignal += OnPlayerDied;
+            _signalBus.Subscribe<PlayerDiedSignal>(OnPlayerDied);
         }
 
         public void Dispose()
         {
-            _playerDiedSignal -= OnPlayerDied;
+            _signalBus.Unsubscribe<PlayerDiedSignal>(OnPlayerDied);
         }
 
         public void Tick()

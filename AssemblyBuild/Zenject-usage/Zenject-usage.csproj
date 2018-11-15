@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E22B1CBF-7E4D-48BD-953B-2B730BD9FF13}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BuildLib</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\..\Bin\Assemblies\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <OutputPath>bin\Debug\</OutputPath>
+    <IntermediateOutputPath>..\..\..\..\Temp\obj\Debug\Zenject-usage\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\..\..\Temp\obj\Debug\Zenject-usage\</BaseIntermediateOutputPath>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <OutputPath>..\..\UnityProject\Assets\Plugins\Zenject\Source\Usage\</OutputPath>
+    <IntermediateOutputPath>..\..\..\..\Temp\obj\Release\Zenject-usage\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\..\..\Temp\obj\Release\Zenject-usage\</BaseIntermediateOutputPath>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug.InternalCloud'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\..\Bin\Assemblies\Debug.InternalCloud\</OutputPath>
+    <IntermediateOutputPath>..\..\..\..\Temp\obj\Debug.InternalCloud\Zenject-usage\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\..\..\Temp\obj\Debug.InternalCloud\Zenject-usage\</BaseIntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG;NOT_UNITY3D</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release.InternalCloud'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\..\Bin\Assemblies\Release.InternalCloud\</OutputPath>
+    <IntermediateOutputPath>..\..\..\..\Temp\obj\Release.InternalCloud\Zenject-usage\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>..\..\..\..\Temp\obj\Release.InternalCloud\Zenject-usage\</BaseIntermediateOutputPath>
+    <DefineConstants>TRACE;DEBUG;NOT_UNITY3D</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IGuiRenderable.cs" />
+    <Compile Include="IInitializable.cs" />
+    <Compile Include="InjectableInfo.cs" />
+    <Compile Include="InjectAttribute.cs" />
+    <Compile Include="InjectLocalAttribute.cs" />
+    <Compile Include="InjectOptionalAttribute.cs" />
+    <Compile Include="InjectSources.cs" />
+    <Compile Include="InjectTypeInfo.cs" />
+    <Compile Include="IPoolable.cs" />
+    <Compile Include="ITickable.cs" />
+    <Compile Include="ILateDisposable.cs" />
+    <Compile Include="InjectAttributeBase.cs" />
+    <Compile Include="JetbrainsAnnotations.cs" />
+    <Compile Include="NoReflectionBakingAttribute.cs" />
+    <Compile Include="PreserveAttribute.cs" />
+    <Compile Include="ZenjectAllowDuringValidationAttribute.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+  </PropertyGroup>
+</Project>

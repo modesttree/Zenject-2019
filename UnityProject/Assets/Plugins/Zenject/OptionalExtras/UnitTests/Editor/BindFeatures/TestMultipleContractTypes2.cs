@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.BindFeatures
 {
@@ -29,10 +25,10 @@ namespace Zenject.Tests.BindFeatures
         [Test]
         public void Test1()
         {
-            var types = new Type[]
+            var types = new[]
             {
                 typeof(Bar),
-                typeof(Foo),
+                typeof(Foo)
             };
 
             Container.Bind(types).AsSingle().NonLazy();
@@ -64,6 +60,7 @@ namespace Zenject.Tests.BindFeatures
             Container.BindInterfacesTo<Foo>().AsSingle().NonLazy();
 
             Assert.IsNull(Container.TryResolve<Foo>());
+
             Assert.IsNotNull(Container.Resolve<IFoo>());
             Assert.IsNotNull(Container.Resolve<IQux>());
         }

@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests
 {
@@ -27,8 +23,8 @@ namespace Zenject.Tests
                 new List<int> {3, 2, 1}));
 
             Assert.That(TestListComparer.ContainSameElements(
-                new List<int> {},
-                new List<int> {}));
+                new List<int>(),
+                new List<int>()));
         }
 
         [Test]

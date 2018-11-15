@@ -1,7 +1,9 @@
 
-## <a id="auto-mocking-using-moq"></a>Auto-Mocking using Moq
+## <a id="auto-mocking-using-moq"></a>Auto-Mocking
 
 One of the really cool features of DI is the fact that it makes testing code much, much easier.  This is because you can easily substitute one dependency for another by using a different Composition Root.  For example, if you only want to test a particular class (let's call it Foo) and don't care about testing its dependencies, you might write 'mocks' for them so that you can isolate Foo specifically.
+
+Here we will use the Moq library but a similar approach should work fine with other mocking libraries (eg. NSubstitute)
 
 ```csharp
 public class Foo
@@ -48,7 +50,9 @@ Then you can implement the fields of the IWebServer interface and configure them
 
 Zenject also allows you to even avoid having to write the MockWebServer class in favour of using a library called "Moq" which does all the work for you.
 
-Note that by default, Auto-mocking is not enabled in Zenject.  If you wish to use the auto-mocking feature then you need to go to your Zenject install directory and extract the contents of "Extras/ZenjectAutoMocking.zip".  Note that there are multiple Moq.dll included in the zip and that you should use the one that targets the Scripting Runtime Version that you have configured in your player settings.  Also note that if you're using Scripting Runtime Version 3.5, that you might also need to change your "Api Compatibility Level" from ".NET 2.0 Subset" to ".NET 2.0"
+Note that by default, Auto-mocking is not enabled in Zenject.  If you wish to use the auto-mocking feature then you need to go to your Zenject install directory and extract the contents of "Zenject\Source\Editor\AutoMocking.zip" into that same directory.
+
+Note that there are multiple versions of Moq.dll included in the zip and that you should use the one that targets the Scripting Runtime Version that you have configured in your player settings.  Also note that if you're using Scripting Runtime Version 3.5, that you might also need to change your "Api Compatibility Level" from ".NET 2.0 Subset" to ".NET 2.0"
 
 After extracting the auto mocking package it is just a matter of using the following syntax to mock out various parts of your project:
 

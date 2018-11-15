@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\Mono.Cecil.Tests.settings" />
+  <PropertyGroup>
+    <ProjectGuid>{29300103-CB76-4A1D-B6FD-FFD91C1EC8AA}</ProjectGuid>
+    <RootNamespace>Zenject.ReflectionBaking.Mono.Cecil.Pdb.Tests</RootNamespace>
+    <AssemblyName>Zenject.ReflectionBaking.Mono.Cecil.Pdb.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Zenject.ReflectionBaking.Mono.Cecil.csproj">
+      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Test\Zenject.ReflectionBaking.Mono.Cecil.Tests.csproj">
+      <Project>{A47B1F49-A81A-43E8-BE6B-DD28AF2C4055}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil.Tests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Zenject.ReflectionBaking.Mono.Cecil.Pdb.csproj">
+      <Project>{63E6915C-7EA4-4D76-AB28-0D7191EEA626}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil.Pdb</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Mono.Cecil.Tests\Linq.cs" />
+    <Compile Include="Mono.Cecil.Tests\PdbTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\assemblies\fsapp.exe" />
+    <Content Include="Resources\assemblies\fsapp.pdb" />
+    <Content Include="Resources\assemblies\test.exe" />
+    <Content Include="Resources\assemblies\test.pdb" />
+    <Content Include="Resources\assemblies\VBConsApp.exe" />
+    <Content Include="Resources\assemblies\VBConsApp.pdb" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

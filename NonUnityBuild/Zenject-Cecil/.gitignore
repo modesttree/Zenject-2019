@@ -1,0 +1,11 @@
+bin
+obj
+*.suo
+*.user
+*.pidb
+*.userprefs
+*.xml
+*.nupkg
+**/test-results/*
+*Resharper*
+Mono.Cecil.sln.ide*

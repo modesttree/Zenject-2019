@@ -1,6 +1,3 @@
-using UnityEngine;
-using Zenject;
-
 namespace Zenject.Tests.Installers.ScriptableObjectInstallers
 {
     //[CreateAssetMenu(fileName = "BarInstaller", menuName = "Installers/BarInstaller")]

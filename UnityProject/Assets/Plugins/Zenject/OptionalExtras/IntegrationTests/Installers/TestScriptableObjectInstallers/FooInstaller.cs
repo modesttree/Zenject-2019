@@ -1,6 +1,3 @@
-using System;
-using UnityEngine;
-
 namespace Zenject.Tests.Installers.ScriptableObjectInstallers
 {
     public class Foo

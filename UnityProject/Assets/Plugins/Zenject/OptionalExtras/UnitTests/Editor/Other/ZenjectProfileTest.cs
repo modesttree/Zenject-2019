@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
 
 namespace Zenject.Tests.Other
 {
@@ -13,10 +7,6 @@ namespace Zenject.Tests.Other
     {
         class Test0
         {
-            public Test0()
-            {
-            }
-
             public void DoStuff()
             {
             }
@@ -28,8 +18,6 @@ namespace Zenject.Tests.Other
 
         class Test1
         {
-
-
             [Inject]
             public Test0 TestB
             {
@@ -38,7 +26,7 @@ namespace Zenject.Tests.Other
             }
 
             [Inject]
-            public Test0 _testC = null;
+            public Test0 _testC;
 
             public Test1(Test0 test1, Test0 test2, Test0 test3, Test0 test4)
             {
@@ -55,7 +43,6 @@ namespace Zenject.Tests.Other
 
         class Test2
         {
-
             [Inject]
             public Test1 TestB
             {
@@ -64,7 +51,7 @@ namespace Zenject.Tests.Other
             }
 
             [Inject]
-            public Test1 _testC = null;
+            public Test1 _testC;
 
             public Test2(Test1 test1, Test1 test2, Test1 test3, Test1 test4)
             {

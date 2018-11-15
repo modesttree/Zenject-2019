@@ -5,31 +5,46 @@ using System.Collections.Generic;
 using System.Linq;
 using ModestTree;
 using UnityEngine;
+using Zenject.Internal;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class ScriptableObjectResourceProvider : IProvider
     {
         readonly DiContainer _container;
         readonly Type _resourceType;
         readonly string _resourcePath;
         readonly List<TypeValuePair> _extraArguments;
-        readonly object _concreteIdentifier;
         readonly bool _createNew;
+        readonly object _concreteIdentifier;
+        readonly Action<InjectContext, object> _instantiateCallback;
 
         public ScriptableObjectResourceProvider(
             string resourcePath, Type resourceType,
-            DiContainer container, object concreteIdentifier, List<TypeValuePair> extraArguments,
-            bool createNew)
+            DiContainer container, IEnumerable<TypeValuePair> extraArguments,
+            bool createNew, object concreteIdentifier,
+            Action<InjectContext, object> instantiateCallback)
         {
             _container = container;
             Assert.DerivesFromOrEqual<ScriptableObject>(resourceType);
 
-            _concreteIdentifier = concreteIdentifier;
-            _extraArguments = extraArguments;
+            _extraArguments = extraArguments.ToList();
             _resourceType = resourceType;
             _resourcePath = resourcePath;
             _createNew = createNew;
+            _concreteIdentifier = concreteIdentifier;
+            _instantiateCallback = instantiateCallback;
+        }
+
+        public bool IsCached
+        {
+            get { return false; }
+        }
+
+        public bool TypeVariesBasedOnMemberType
+        {
+            get { return false; }
         }
 
         public Type GetInstanceType(InjectContext context)
@@ -37,41 +52,51 @@ namespace Zenject
             return _resourceType;
         }
 
-        public IEnumerator<List<object>> GetAllInstancesWithInjectSplit(
-            InjectContext context, List<TypeValuePair> args)
+        public void GetAllInstancesWithInjectSplit(
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
         {
             Assert.IsNotNull(context);
 
-            List<object> objects;
-
             if (_createNew)
             {
-                objects = Resources.LoadAll(_resourcePath, _resourceType)
-                    .Select(x => ScriptableObject.Instantiate(x)).Cast<object>().ToList();
+                var objects = Resources.LoadAll(_resourcePath, _resourceType);
+
+                for (int i = 0; i < objects.Length; i++)
+                {
+                    buffer.Add(ScriptableObject.Instantiate(objects[i]));
+                }
             }
             else
             {
-                objects = Resources.LoadAll(_resourcePath, _resourceType)
-                    .Cast<object>().ToList();
+                buffer.AllocFreeAddRange(
+                    Resources.LoadAll(_resourcePath, _resourceType));
             }
 
-            Assert.That(!objects.IsEmpty(),
-                "Could not find resource at path '{0}' with type '{1}'", _resourcePath, _resourceType);
+            Assert.That(buffer.Count > 0,
+            "Could not find resource at path '{0}' with type '{1}'", _resourcePath, _resourceType);
 
-            yield return objects;
-
-            var injectArgs = new InjectArgs()
+            injectAction = () =>
             {
-                ExtraArgs = _extraArguments.Concat(args).ToList(),
-                Context = context,
-                ConcreteIdentifier = _concreteIdentifier,
+                for (int i = 0; i < buffer.Count; i++)
+                {
+                    var obj = buffer[i];
+
+                    var extraArgs = ZenPools.SpawnList<TypeValuePair>();
+
+                    extraArgs.AllocFreeAddRange(_extraArguments);
+                    extraArgs.AllocFreeAddRange(args);
+
+                    _container.InjectExplicit(
+                        obj, _resourceType, extraArgs, context, _concreteIdentifier);
+
+                    ZenPools.DespawnList(extraArgs);
+
+                    if (_instantiateCallback != null)
+                    {
+                        _instantiateCallback(context, obj);
+                    }
+                }
             };
-
-            foreach (var obj in objects)
-            {
-                _container.InjectExplicit(
-                    obj, _resourceType, injectArgs);
-            }
         }
     }
 }

@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -16,7 +13,7 @@ namespace Zenject.Tests.Bindings
         {
             var foo = new Foo();
 
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo }).AsSingle().NonLazy();
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo }).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
         }
@@ -28,7 +25,7 @@ namespace Zenject.Tests.Bindings
             // like FromSubcontainerResolve, FromComponentInPrefab, etc.
             // The 'single' is really refering to the fact that it's a single resolve handler, not a
             // single instance
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { new Foo(), new Foo() }).AsSingle().NonLazy();
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { new Foo(), new Foo() }).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.ResolveAll<Foo>().Count, 2);
         }
@@ -39,7 +36,7 @@ namespace Zenject.Tests.Bindings
             var foo1 = new Foo();
             var foo2 = new Foo();
 
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo1, foo2 });
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo1, foo2 });
 
             var foos = Container.ResolveAll<Foo>();
             Assert.IsEqual(foos[0], foo1);
@@ -54,8 +51,8 @@ namespace Zenject.Tests.Bindings
             var foo3 = new Foo();
             var foo4 = new Foo();
 
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo1, foo2 });
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo3, foo4 });
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo1, foo2 });
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo3, foo4 });
 
             var foos = Container.ResolveAll<Foo>();
 
@@ -70,7 +67,7 @@ namespace Zenject.Tests.Bindings
         {
             var foo = new Foo();
 
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo }).AsTransient().NonLazy();
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo }).AsTransient().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
         }
@@ -80,42 +77,9 @@ namespace Zenject.Tests.Bindings
         {
             var foo = new Foo();
 
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { foo }).AsCached().NonLazy();
+            Container.Bind<Foo>().FromMethodMultiple(ctx => new[] { foo }).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), foo);
-        }
-
-        [Test]
-        public void TestSingleConflict()
-        {
-            Container.Bind<Foo>().FromMethodMultiple((ctx) => new[] { new Foo() }).AsSingle().NonLazy();
-            Container.Bind<Foo>().AsSingle().NonLazy();
-
-            Assert.Throws(() => Container.FlushBindings());
-        }
-
-        [Test]
-        public void TestSingle2()
-        {
-            var foo = new Foo();
-            Func<InjectContext, IEnumerable<Foo>> method = (ctx) => new[] { foo };
-
-            Container.Bind<Foo>().FromMethodMultiple(method).AsSingle().NonLazy();
-            Container.Bind<IFoo>().To<Foo>().FromMethodMultiple(method).AsSingle().NonLazy();
-
-            Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<Foo>());
-            Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
-            Assert.IsEqual(Container.Resolve<Foo>(), foo);
-        }
-
-        [Test]
-        public void TestSingle3()
-        {
-            Container.Bind<Foo>().FromMethodMultiple(CreateFoos).AsSingle().NonLazy();
-            Container.Bind<IFoo>().To<Foo>().FromMethodMultiple(CreateFoos).AsSingle().NonLazy();
-
-            Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<Foo>());
-            Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
         }
 
         IEnumerable<Foo> CreateFoos(InjectContext ctx)
@@ -124,33 +88,11 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
-        public void TestSingle4()
-        {
-            int numCalls = 0;
-
-            Func<InjectContext, IEnumerable<Foo>> method = (ctx) =>
-                {
-                    numCalls++;
-                    return new[] { new Foo() };
-                };
-
-            Container.Bind<Foo>().FromMethodMultiple(method).AsSingle().NonLazy();
-            Container.Bind<IFoo>().To<Foo>().FromMethodMultiple(method).AsSingle().NonLazy();
-
-            Container.Resolve<Foo>();
-            Container.Resolve<Foo>();
-            Container.Resolve<Foo>();
-            Container.Resolve<IFoo>();
-
-            Assert.IsEqual(numCalls, 1);
-        }
-
-        [Test]
         public void TestTransient2()
         {
             int numCalls = 0;
 
-            Func<InjectContext, IEnumerable<Foo>> method = (ctx) =>
+            Func<InjectContext, IEnumerable<Foo>> method = ctx =>
             {
                 numCalls++;
                 return new[] { new Foo() };
@@ -170,7 +112,7 @@ namespace Zenject.Tests.Bindings
         [Test]
         public void TestCached2()
         {
-            Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromMethodMultiple((ctx) => new[] { new Foo() }).AsCached().NonLazy();
+            Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromMethodMultiple(ctx => new[] { new Foo() }).AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<Foo>());
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());

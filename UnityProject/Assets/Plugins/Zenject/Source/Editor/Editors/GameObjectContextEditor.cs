@@ -1,8 +1,11 @@
+#if !ODIN_INSPECTOR
+
 using UnityEditor;
 
 namespace Zenject
 {
     [CustomEditor(typeof(GameObjectContext))]
+    [NoReflectionBaking]
     public class GameObjectContextEditor : RunnableContextEditor
     {
         SerializedProperty _kernel;
@@ -22,3 +25,5 @@ namespace Zenject
         }
     }
 }
+
+#endif

@@ -1,6 +1,3 @@
-using UnityEngine;
-using Zenject;
-
 namespace Zenject.Tests.Installers.Installers
 {
     public class BarInstaller : Installer<string, BarInstaller>

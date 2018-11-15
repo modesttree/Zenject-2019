@@ -1,6 +1,3 @@
-using UnityEngine;
-using Zenject;
-
 namespace Zenject.Tests.Installers.MonoInstallers
 {
     public class QuxInstaller : MonoInstaller<string, float, int, QuxInstaller>

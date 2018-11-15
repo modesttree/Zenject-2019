@@ -1,47 +1,43 @@
 using System;
 using UnityEngine;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
     public class EnemyDeathHandler
     {
-        readonly EnemyKilledSignal _enemyKilledSignal;
-        readonly EnemyFacade.Pool _selfFactory;
-        readonly Settings _settings;
-        readonly Explosion.Pool _explosionPool;
-        readonly IAudioPlayer _audioPlayer;
-        readonly Enemy _enemy;
         readonly EnemyFacade _facade;
+        readonly SignalBus _signalBus;
+        readonly Settings _settings;
+        readonly Explosion.Factory _explosionFactory;
+        readonly AudioPlayer _audioPlayer;
+        readonly EnemyView _view;
 
         public EnemyDeathHandler(
-            Enemy enemy,
-            IAudioPlayer audioPlayer,
-            Explosion.Pool explosionPool,
+            EnemyView view,
+            AudioPlayer audioPlayer,
+            Explosion.Factory explosionFactory,
             Settings settings,
-            EnemyFacade.Pool selfFactory,
-            EnemyFacade facade,
-            EnemyKilledSignal enemyKilledSignal)
+            SignalBus signalBus,
+            EnemyFacade facade)
         {
-            _enemyKilledSignal = enemyKilledSignal;
             _facade = facade;
-            _selfFactory = selfFactory;
+            _signalBus = signalBus;
             _settings = settings;
-            _explosionPool = explosionPool;
+            _explosionFactory = explosionFactory;
             _audioPlayer = audioPlayer;
-            _enemy = enemy;
+            _view = view;
         }
 
         public void Die()
         {
-            var explosion = _explosionPool.Spawn();
-            explosion.transform.position = _enemy.Position;
+            var explosion = _explosionFactory.Create();
+            explosion.transform.position = _view.Position;
 
             _audioPlayer.Play(_settings.DeathSound, _settings.DeathSoundVolume);
 
-            _enemyKilledSignal.Fire();
+            _signalBus.Fire<EnemyKilledSignal>();
 
-            _selfFactory.Despawn(_facade);
+            _facade.Dispose();
         }
 
         [Serializable]

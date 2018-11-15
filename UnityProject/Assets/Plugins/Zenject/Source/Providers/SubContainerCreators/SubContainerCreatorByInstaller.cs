@@ -2,29 +2,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModestTree;
+using Zenject.Internal;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class SubContainerCreatorByInstaller : ISubContainerCreator
     {
         readonly Type _installerType;
         readonly DiContainer _container;
         readonly List<TypeValuePair> _extraArgs;
+        readonly SubContainerCreatorBindInfo _containerBindInfo;
 
         public SubContainerCreatorByInstaller(
-            DiContainer container, Type installerType, List<TypeValuePair> extraArgs)
+            DiContainer container,
+            SubContainerCreatorBindInfo containerBindInfo,
+            Type installerType,
+            IEnumerable<TypeValuePair> extraArgs)
         {
             _installerType = installerType;
             _container = container;
-            _extraArgs = extraArgs;
+            _extraArgs = extraArgs.ToList();
+            _containerBindInfo = containerBindInfo;
 
             Assert.That(installerType.DerivesFrom<InstallerBase>(),
                 "Invalid installer type given during bind command.  Expected type '{0}' to derive from 'Installer<>'", installerType);
         }
 
         public SubContainerCreatorByInstaller(
-            DiContainer container, Type installerType)
-            : this(container, installerType, new List<TypeValuePair>())
+            DiContainer container,
+            SubContainerCreatorBindInfo containerBindInfo,
+            Type installerType)
+            : this(container, containerBindInfo, installerType, new List<TypeValuePair>())
         {
         }
 
@@ -32,20 +41,21 @@ namespace Zenject
         {
             var subContainer = _container.CreateSubContainer();
 
+            SubContainerCreatorUtil.ApplyBindSettings(_containerBindInfo, subContainer);
+
+            var extraArgs = ZenPools.SpawnList<TypeValuePair>();
+
+            extraArgs.AllocFreeAddRange(_extraArgs);
+            extraArgs.AllocFreeAddRange(args);
+
             var installer = (InstallerBase)subContainer.InstantiateExplicit(
-                _installerType, args.Concat(_extraArgs).ToList());
+                _installerType, extraArgs);
+
+            ZenPools.DespawnList(extraArgs);
+
             installer.InstallBindings();
 
-            subContainer.ResolveDependencyRoots();
-            subContainer.FlushInjectQueue();
-
-            if (subContainer.IsValidating)
-            {
-                // The root-level Container has its ValidateValidatables method
-                // called explicitly - however, this is not so for sub-containers
-                // so call it here instead
-                subContainer.ValidateValidatables();
-            }
+            subContainer.ResolveRoots();
 
             return subContainer;
         }

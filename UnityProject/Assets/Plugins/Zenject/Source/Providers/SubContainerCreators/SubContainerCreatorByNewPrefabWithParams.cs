@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using ModestTree;
 using System.Linq;
+using ModestTree;
 using Zenject.Internal;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class SubContainerCreatorByNewPrefabWithParams : ISubContainerCreator
     {
         readonly DiContainer _container;
@@ -67,7 +68,7 @@ namespace Zenject
             Assert.That(context != null,
                 "Expected prefab with name '{0}' to container a component of type 'GameObjectContext'", prefab.name);
 
-            // Note: We don't need to call ValidateValidatables here because GameObjectContext does this for us
+            // Note: We don't need to call ResolveRoots here because GameObjectContext does this for us
 
             return context.Container;
         }

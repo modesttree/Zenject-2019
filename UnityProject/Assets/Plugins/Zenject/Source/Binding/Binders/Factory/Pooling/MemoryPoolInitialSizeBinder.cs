@@ -1,27 +1,57 @@
-using System;
-using System.Collections.Generic;
-using ModestTree;
-
 namespace Zenject
 {
-    public class MemoryPoolInitialSizeBinder<TContract> : MemoryPoolExpandBinder<TContract>
+    [NoReflectionBaking]
+    public class MemoryPoolMaxSizeBinder<TContract> : MemoryPoolExpandBinder<TContract>
     {
-        public MemoryPoolInitialSizeBinder(
-            BindInfo bindInfo, FactoryBindInfo factoryBindInfo, MemoryPoolBindInfo poolBindInfo)
-            : base(bindInfo, factoryBindInfo, poolBindInfo)
+        public MemoryPoolMaxSizeBinder(
+            DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, MemoryPoolBindInfo poolBindInfo)
+            : base(bindContainer, bindInfo, factoryBindInfo, poolBindInfo)
         {
         }
 
-        public MemoryPoolExpandBinder<TContract> WithInitialSize(int size)
+        public MemoryPoolExpandBinder<TContract> WithMaxSize(int size)
+        {
+            MemoryPoolBindInfo.MaxSize = size;
+            return this;
+        }
+    }
+
+    [NoReflectionBaking]
+    public class MemoryPoolInitialSizeMaxSizeBinder<TContract> : MemoryPoolMaxSizeBinder<TContract>
+    {
+        public MemoryPoolInitialSizeMaxSizeBinder(
+            DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, MemoryPoolBindInfo poolBindInfo)
+            : base(bindContainer, bindInfo, factoryBindInfo, poolBindInfo)
+        {
+        }
+
+        public MemoryPoolMaxSizeBinder<TContract> WithInitialSize(int size)
         {
             MemoryPoolBindInfo.InitialSize = size;
             return this;
         }
 
-        public FactoryToChoiceIdBinder<TContract> WithFixedSize(int size)
+        public FactoryArgumentsToChoiceBinder<TContract> WithFixedSize(int size)
         {
             MemoryPoolBindInfo.InitialSize = size;
-            MemoryPoolBindInfo.ExpandMethod = PoolExpandMethods.Fixed;
+            MemoryPoolBindInfo.MaxSize = size;
+            MemoryPoolBindInfo.ExpandMethod = PoolExpandMethods.Disabled;
+            return this;
+        }
+    }
+
+    [NoReflectionBaking]
+    public class MemoryPoolIdInitialSizeMaxSizeBinder<TContract> : MemoryPoolInitialSizeMaxSizeBinder<TContract>
+    {
+        public MemoryPoolIdInitialSizeMaxSizeBinder(
+            DiContainer bindContainer, BindInfo bindInfo, FactoryBindInfo factoryBindInfo, MemoryPoolBindInfo poolBindInfo)
+            : base(bindContainer, bindInfo, factoryBindInfo, poolBindInfo)
+        {
+        }
+
+        public MemoryPoolInitialSizeMaxSizeBinder<TContract> WithId(object identifier)
+        {
+            BindInfo.Identifier = identifier;
             return this;
         }
     }

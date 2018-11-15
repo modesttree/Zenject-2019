@@ -33,6 +33,19 @@ namespace ModestTree
 #if ZEN_STRIP_ASSERTS_IN_BUILDS
         [Conditional("UNITY_EDITOR")]
 #endif
+        // This is better because IsEmpty with IEnumerable causes a memory alloc
+        public static void IsEmpty<T>(IList<T> list)
+        {
+            if (list.Count != 0)
+            {
+                throw CreateException(
+                    "Expected collection to be empty but instead found '{0}' elements", list.Count);
+            }
+        }
+
+#if ZEN_STRIP_ASSERTS_IN_BUILDS
+        [Conditional("UNITY_EDITOR")]
+#endif
         public static void IsEmpty<T>(IEnumerable<T> sequence)
         {
             if (!sequence.IsEmpty())
@@ -57,7 +70,7 @@ namespace ModestTree
         {
             if (!(obj is T))
             {
-                throw CreateException("Assert Hit! {0}\nWrong type found. Expected '{1}' (left) but found '{2}' (right). ", message, typeof(T).Name(), obj.GetType().Name());
+                throw CreateException("Assert Hit! {0}\nWrong type found. Expected '{1}' (left) but found '{2}' (right). ", message, typeof(T).PrettyName(), obj.GetType().PrettyName());
             }
         }
 
@@ -211,7 +224,7 @@ namespace ModestTree
             if (val != null)
             {
                 throw CreateException(
-                    "Assert Hit! {0}", FormatString(message, p1));
+                    "Assert Hit! {0}", message.Fmt(p1));
             }
         }
 
@@ -245,7 +258,7 @@ namespace ModestTree
         {
             if (val == null)
             {
-                throw CreateException("Assert Hit! {0}", FormatString(message, p1));
+                throw CreateException("Assert Hit! {0}", message.Fmt(p1));
             }
         }
 
@@ -257,7 +270,7 @@ namespace ModestTree
         {
             if (val == null)
             {
-                throw CreateException("Assert Hit! {0}", FormatString(message, p1, p2));
+                throw CreateException("Assert Hit! {0}", message.Fmt(p1, p2));
             }
         }
 
@@ -329,7 +342,7 @@ namespace ModestTree
         {
             if (!condition)
             {
-                throw CreateException("Assert hit! " + FormatString(message, p1));
+                throw CreateException("Assert hit! " + message.Fmt(p1));
             }
         }
 
@@ -342,7 +355,7 @@ namespace ModestTree
         {
             if (!condition)
             {
-                throw CreateException("Assert hit! " + FormatString(message, p1, p2));
+                throw CreateException("Assert hit! " + message.Fmt(p1, p2));
             }
         }
 
@@ -355,7 +368,7 @@ namespace ModestTree
         {
             if (!condition)
             {
-                throw CreateException("Assert hit! " + FormatString(message, p1, p2, p3));
+                throw CreateException("Assert hit! " + message.Fmt(p1, p2, p3));
             }
         }
 
@@ -397,35 +410,6 @@ namespace ModestTree
                 "Expected to receive exception of type '{0}' but nothing was thrown", typeof(TException).Name);
         }
 
-        static string FormatString(string format, params object[] parameters)
-        {
-            // ensure nulls are replaced with "NULL"
-            // and that the original parameters array will not be modified
-            if (parameters != null && parameters.Length > 0)
-            {
-                object[] paramToUse = parameters;
-
-                foreach (object cur in parameters)
-                {
-                    if (cur == null)
-                    {
-                        paramToUse = new object[parameters.Length];
-
-                        for (int i = 0; i < parameters.Length; ++i)
-                        {
-                            paramToUse[i] = parameters[i] ?? "NULL";
-                        }
-
-                        break;
-                    }
-                }
-
-                format = string.Format(format, paramToUse);
-            }
-
-            return format;
-        }
-
         public static ZenjectException CreateException()
         {
             return new ZenjectException("Assert hit!");
@@ -438,12 +422,12 @@ namespace ModestTree
 
         public static ZenjectException CreateException(string message, params object[] parameters)
         {
-            return new ZenjectException(FormatString(message, parameters));
+            return new ZenjectException(message.Fmt(parameters));
         }
 
         public static ZenjectException CreateException(Exception innerException, string message, params object[] parameters)
         {
-            return new ZenjectException(FormatString(message, parameters), innerException);
+            return new ZenjectException(message.Fmt(parameters), innerException);
         }
     }
 }

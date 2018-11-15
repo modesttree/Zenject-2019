@@ -8,58 +8,22 @@ namespace ModestTree
 {
     public static class LinqExtensions
     {
-        public static void ForEach<T>(this IEnumerable<T> first, Action<T> action)
+        public static IEnumerable<T> Yield<T>(this T item)
         {
-            foreach(T t in first)
-            {
-                action(t);
-            }
-        }
-
-        // Inclusive because it includes the item that meets the predicate
-        public static IEnumerable<TSource> TakeUntilInclusive<TSource>(
-            this IEnumerable<TSource> source, Func<TSource, bool> predicate)
-        {
-            foreach (var item in source)
-            {
-                yield return item;
-                if (predicate(item))
-                {
-                    yield break;
-                }
-            }
+            yield return item;
         }
 
         // Return the first item when the list is of length one and otherwise returns default
         public static TSource OnlyOrDefault<TSource>(this IEnumerable<TSource> source)
         {
-            if (source == null)
+            Assert.IsNotNull(source);
+
+            if (source.Count() > 1)
             {
-                throw new ArgumentNullException("source");
+                return default(TSource);
             }
 
-            var results = source.Take(2).ToArray();
-            return results.Length == 1 ? results[0] : default(TSource);
-        }
-
-        // Another name for IEnumerable.Reverse()
-        // This is useful to distinguish betweeh List.Reverse() when dealing with a list
-        public static IEnumerable<T> Reversed<T>(this IEnumerable<T> list)
-        {
-            return list.Reverse();
-        }
-
-        public static IEnumerable<T> Prepend<T>(this IEnumerable<T> first, IEnumerable<T> second)
-        {
-            foreach (T t in second)
-            {
-                yield return t;
-            }
-
-            foreach (T t in first)
-            {
-                yield return t;
-            }
+            return source.FirstOrDefault();
         }
 
         // These are more efficient than Count() in cases where the size of the collection is not known
@@ -93,135 +57,9 @@ namespace ModestTree
             return list.GroupBy(x => x).Where(x => x.Skip(1).Any()).Select(x => x.Key);
         }
 
-        public static IEnumerable<T> ReplaceOrAppend<T>(
-            this IEnumerable<T> enumerable, Predicate<T> match, T replacement)
-        {
-            bool replaced = false;
-
-            foreach (T t in enumerable)
-            {
-                if (match(t))
-                {
-                    replaced = true;
-                    yield return replacement;
-                }
-                else
-                {
-                    yield return t;
-                }
-            }
-
-            if (!replaced)
-            {
-                yield return replacement;
-            }
-        }
-
-        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator enumerator)
-        {
-            while (enumerator.MoveNext())
-            {
-                yield return (T)enumerator.Current;
-            }
-        }
-
-        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
-        {
-            while (enumerator.MoveNext())
-            {
-                yield return enumerator.Current;
-            }
-        }
-
-        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
-        {
-            return new HashSet<T>(enumerable);
-        }
-
-        // This is more efficient than just Count() < x because it will end early
-        // rather than iterating over the entire collection
-        public static bool IsLength<T>(this IEnumerable<T> enumerable, int amount)
-        {
-            return enumerable.Take(amount + 1).Count() == amount;
-        }
-
         public static IEnumerable<T> Except<T>(this IEnumerable<T> list, T item)
         {
             return list.Except(item.Yield());
-        }
-
-        public static T GetSingle<T>(this object[] objectArray, bool required)
-        {
-            if (required)
-            {
-                return objectArray.Where(x => x is T).Cast<T>().Single();
-            }
-            else
-            {
-                return objectArray.Where(x => x is T).Cast<T>().SingleOrDefault();
-            }
-        }
-
-        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector)
-        {
-            return source.DistinctBy(keySelector, null);
-        }
-
-        public static IEnumerable<TSource> DistinctBy<TSource, TKey>(this IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
-        {
-            if (source == null)
-                throw new ArgumentNullException("source");
-            if (keySelector == null)
-                throw new ArgumentNullException("keySelector");
-            return DistinctByImpl(source, keySelector, comparer);
-        }
-
-        static IEnumerable<TSource> DistinctByImpl<TSource, TKey>(IEnumerable<TSource> source,
-            Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
-        {
-            var knownKeys = new HashSet<TKey>(comparer);
-            foreach (var element in source)
-            {
-                if (knownKeys.Add(keySelector(element)))
-                {
-                    yield return element;
-                }
-            }
-        }
-
-        public static T Second<T>(this IEnumerable<T> list)
-        {
-            return list.Skip(1).First();
-        }
-
-        public static T SecondOrDefault<T>(this IEnumerable<T> list)
-        {
-            return list.Skip(1).FirstOrDefault();
-        }
-
-        public static int RemoveAll<T>(this LinkedList<T> list, Func<T, bool> predicate)
-        {
-            int numRemoved = 0;
-
-            var currentNode = list.First;
-            while (currentNode != null)
-            {
-                if (predicate(currentNode.Value))
-                {
-                    var toRemove = currentNode;
-                    currentNode = currentNode.Next;
-                    list.Remove(toRemove);
-                    numRemoved++;
-                }
-                else
-                {
-                    currentNode = currentNode.Next;
-                }
-            }
-
-            return numRemoved;
         }
 
         // LINQ already has a method called "Contains" that does the same thing as this
@@ -240,37 +78,6 @@ namespace ModestTree
         {
             // Use object.Equals to support null values
             return list.Where(x => object.Equals(x, value)).Any();
-        }
-
-        // We call it Zipper instead of Zip to avoid naming conflicts with .NET 4
-        public static IEnumerable<T> Zipper<A, B, T>(
-            this IEnumerable<A> seqA, IEnumerable<B> seqB, Func<A, B, T> func)
-        {
-            using (var iteratorA = seqA.GetEnumerator())
-            using (var iteratorB = seqB.GetEnumerator())
-            {
-                while (true)
-                {
-                    bool isDoneA = !iteratorA.MoveNext();
-                    bool isDoneB = !iteratorB.MoveNext();
-
-                    Assert.That(isDoneA == isDoneB,
-                        "Given collections have different length in Zip operator");
-
-                    if (isDoneA || isDoneB)
-                    {
-                        break;
-                    }
-
-                    yield return func(iteratorA.Current, iteratorB.Current);
-                }
-            }
-        }
-
-        public static IEnumerable<ValuePair<A, B>> Zipper<A, B>(
-            this IEnumerable<A> seqA, IEnumerable<B> seqB)
-        {
-            return seqA.Zipper<A, B, ValuePair<A, B>>(seqB, ValuePair.New);
         }
     }
 }

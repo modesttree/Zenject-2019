@@ -1,3 +1,5 @@
+#if !ODIN_INSPECTOR
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +13,7 @@ using ModestTree;
 namespace Zenject
 {
     [CustomEditor(typeof(SceneDecoratorContext))]
+    [NoReflectionBaking]
     public class SceneDecoratorContextEditor : ContextEditor
     {
         SerializedProperty _decoratedContractNameProperty;
@@ -72,3 +75,5 @@ namespace Zenject
         }
     }
 }
+
+#endif

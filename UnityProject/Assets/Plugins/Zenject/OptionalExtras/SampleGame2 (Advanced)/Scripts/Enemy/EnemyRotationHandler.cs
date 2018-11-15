@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Zenject;
 
 namespace Zenject.SpaceFighter
 {
@@ -10,29 +9,33 @@ namespace Zenject.SpaceFighter
     public class EnemyRotationHandler : IFixedTickable
     {
         readonly Settings _settings;
-        readonly Enemy _enemy;
+        readonly EnemyView _view;
 
         public EnemyRotationHandler(
-            Enemy enemy,
+            EnemyView view,
             Settings settings)
         {
             _settings = settings;
-            _enemy = enemy;
+            _view = view;
+        }
+
+        public Vector2 DesiredLookDir
+        {
+            get; set;
         }
 
         public void FixedTick()
         {
-            var lookDir = _enemy.LookDir;
-            var goalDir = _enemy.DesiredLookDir;
+            var lookDir = _view.LookDir;
 
-            var error = Vector3.Angle(lookDir, goalDir);
+            var error = Vector3.Angle(lookDir, DesiredLookDir);
 
-            if (Vector3.Cross(lookDir, goalDir).z < 0)
+            if (Vector3.Cross(lookDir, DesiredLookDir).z < 0)
             {
                 error *= -1;
             }
 
-            _enemy.AddTorque(error * _settings.TurnSpeed);
+            _view.AddTorque(error * _settings.TurnSpeed);
         }
 
         [Serializable]

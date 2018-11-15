@@ -1,5 +1,3 @@
-using System;
-using Zenject;
 using UnityEngine;
 
 namespace Zenject.SpaceFighter

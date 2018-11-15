@@ -1,7 +1,10 @@
-﻿using UnityEditor;
+﻿#if !ODIN_INSPECTOR
+
+using UnityEditor;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class RunnableContextEditor : ContextEditor
     {
         SerializedProperty _autoRun;
@@ -22,3 +25,5 @@ namespace Zenject
     }
 }
 
+
+#endif

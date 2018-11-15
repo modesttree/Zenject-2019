@@ -1,11 +1,165 @@
 
-## <a id="release-notes"></a>Release Notes
+# <a id="release-notes"></a>Release Notes
 
-###5.5.1 (March 12, 2018)
+## Version 7.3.1 (October 20, 2018)
+
+Minor bug fixes
+
+- Fixed compiler error related to the test framework asmdef
+- Fixed issue with reflection baking on Unity 2018.3
+- Changed the visual order of installers in contexts to match the actual order they are executed in (eg. scriptable object installers first)
+
+## Version 7.3.0 (October 6, 2018)
+
+Merged in changes from LTS version 6.5.0
+
+## Version 6.5.0 (October 6, 2018)
+
+Mostly optimizations, some minor bug fixes, and a few minor new features.
+
+Notable:
+- Added support for [Reflection Baking](https://github.com/svermeulen/Zenject#optimization_notes) to automatically eliminate costs associated with reflection from your zenject application.
+- General optimizations to memory usage and processing time
+- Added non-generic versions of all the FromComponentX methods
+- Fixed multi-threading issues
+- Added new bind methods ByNewGameObjectInstaller and ByNewGameObjectMethod
+- Added ZEN_INTERNAL_PROFILING define to allow users to easily see how much cpu time is devoted to zenject versus custom game code
+- Added an optional identifier for signals
+
+Minor:
+- Added ability to use custom attributes in place of Zenject.InjectAttribute
+- Changed to use Expression.New when possible for inject methods, fields, properties, and constructors for extra speed
+- Added ArrayPool class
+- Improved readability of error messages
+- Fixed rare bug where instantiated prefabs would get offset slightly by the scene context position
+- Renamed ByNewPrefabResource to ByNewContextPrefabResource properly and made the previous name obsolete
+- Added documentation for WithKernel, and WithDefaultGameObjectParent bind methods
+
+## Version 7.2.0 (August 27, 2018)
+
+Merged in changes from LTS version 6.4.0
+
+## Version 6.4.0 (August 27, 2018)
+
+A few new minor features and some bug fixes
+
+Notable:
+- Added new bind method WithDefaultGameObjectParent when using FromSubContainerResolve and ByInstaller or ByMethod to ensure instantiated game objects get destroyed with the subcontainer
+- Added WithKernel bind method to avoid the need to make Facades always derive from Kernel
+- Added ability to specify transient scope with BindFactory and BindMemoryPool methods
+- Added new bind method OnInstantiated to run custom code when the object is created
+
+Minor:
+- Fixed decorators to properly be inherited into subcontainers
+- Fixed bug with validation + decorators
+- Added PrefabFactory and PrefabResourceFactory helper classes
+- Fixed issue with destruction order of signals in some edge cases
+- Added FromSubContainerResolve.ByInstance bind method to explicitly supply container to use
+- Bug fix to support factories with 6 arguments
+- Added ParentBus property to SignalBus
+
+## Version 7.1.0 (August 6, 2018)
+
+Merged in changes from LTS version 6.3.0
+
+## Version 6.3.0 (August 6, 2018)
+
+Bug fixes and some minor extensions
+
+- Fixed struct type signals to work properly on AOT platforms
+- Fixed issue with ZenjectIntegrationTestFixture where exceptions were being thrown during setup
+- Added support for testing multiple scenes at once when using SceneTestFixture
+- Added TryFire method on SignalBus for cases where you don't care if it's declared or not
+- Fixed zenject integration tests to play nicely with asmdef files
+
+## Version 7.0.0 (July 19, 2018)
+
+Upgraded project to 2018.1.  Created an LTS branch of zenject to maintain support for Unity 2017.x
+
+- Fixed IL2CPP issue with 2018.2
+- Fixed issue with the asmdef files failing to generate a valid solution
+
+## Version 6.2.1 (July 19, 2018)
+
+Hotfix release for issue with testframework
+
+- Changed to have all the test helper classes in one place underneath OptionalExtras/TestFramework and also fixed to not place it in a zip
+- Fixed rare issue when instantiating prefabs in ZenjectUnitTestFixture (#506)
+
+## Version 6.2.0 (July 18, 2018)
+
+Bug fixes and some minor extensions
+
+- Added back IInstantiator interface to be used as an alternative to directly injecting DiContainer
+- Added unity project management asmdef files
+- Fixed compiler warning about missing assignment for Inject fields when using Rider IDE (#483)
+- Fixed to support signals defined as structs instead of classes
+- Added optional signals support to the non unity zenject dll build
+- Fixed BindSignal to support mapping to multiple bindings at once
+- Fixed support for UWP platform with .NET scripting backend
+
+## Version 6.1.1 (June 18, 2018)
+
+Hotfix for exception in SceneContext inspector editor
+
+## Version 6.1.0 (June 17, 2018)
+
+Large release with lots of new features, bug fixes, and performance improvements.  Some API changes to be aware of before upgrading.  See the <a href="../README.md#upgrading-from-zenject5">upgrade guide</a> for details
+
+This will also be the beginning of a Zenject LTS stream that will follow Unity LTS
+
+Significant:
+- Replaced the signals system with a very different 'event bus' like approach.  Also fully decoupled signals from zenject core so it can be unchecked from OptionalExtras when importing
+- Removed ability to use AsSingle with the same type across multiple bind statements.  If you want to map multiple contracts to the same AsSingle, you need to include multiple types in the Bind(..) or use FromResolve
+- Renamed Factory<> to PlaceholderFactory<>
+- Changed behaviour during OnApplicationQuit to not forcefully destroy all scenes and their contents.  This was added previously to force a reasonable destruction order, however it breaks things on android so was turned off by default.  However it can be re-enabled via ZenjectSettings for people that need a predictable destruction order
+- Changed validate keyboard shortcut from CTRL+SHIFT+V to CTRL+ALT+V to avoid conflict with Vuforia
+
+Notable:
+- Performance improvements - in some cases doubling the startup speed.  Also allocates a lot less garbage now by using memory pools internally
+- Added support for automatically loading parent scene contracts and decorated scenes by including a config file in resources that specifies default scenes for certain contract names
+- Added support for "decorator" bindings by calling Container.Decorate (see docs for usage)
+- Added support for much more complex custom factory configuration using FromIFactory in addition to just FromFactory
+- Added new type of Test Fixture called SceneTestFixture to run tests on a given production scene
+- Added ability to use [Inject], IInitializable, etc. from within custom user DLLs by referencing Zenject-Usage.dll
+- Added ability to add user supplied validation logic by deriving from IValidatable
+- Also added a way to set global zenject settings to control things like validation behaviour, error output, etc. through the ProjectContext inspector
+- Renamed Zenject.Lazy class to Zenject.LazyInject to avoid name conflict with System.Lazy on .NET 4.6  (we cannot use System.Lazy directly because of issues with IL2CPP)
+- Fixed to automatically inject StateMachineBehaviour derived classes attached to Animator components
+- Changed the default value for includeInactive parameter to FromComponentX methods to be true, since this is very important when instantiating prefabs and therefore makes more sense as a default
+- Fixed some issues related to binding open generic types
+- Added documentation for ZenAutoInjecter to allow injection to occur when using GameObject.Instantiate
+- Added debugging window to monitor all active memory pools (aka Memory Pool Monitor Window)
+- Changed MonoMemoryPool to automatically revert to the original parents during despawn
+- Changed to automatically add profiling information for ITickable.Tick, IInitializable.Initialize, IDisposable.Dispose methods, when inside the unity editor and when the unity profiler is open.  This now functions similar to MonoBehaviours in that these methods will automatically be listed in Profiler.
+- Bind methods that involve a lookup now have a plural and non-plural versions (this includes FromComponentInChildren, FromComponentInParents, FromComponentSibling, FromComponentInNewPrefab, FromResource, FromResolveAll, and FromSubContainerResolveAll)
+- Misc. bug fixes
+
+Minor:
+- Updated the sample projects to use more modern techniques
+- Added missing bind methods to Container.Bind such as ByNewPrefabMethod, ByNewPrefabInstaller, ByNewPrefaResourceInstaller, and ByNewPrefabResourceMethod
+- Added events on SceneContext, GameObjectContext, and ProjectContext to hook into post-install / pre-install events
+- Standardized the naming of the bind methods for custom interfaces for factories and memory pools.  BindFactoryContract was renamed to BindFactoryCustomInterface and the overload of BindMemoryPool taking a custom interface was renamed BindMemoryPoolCustomInterface
+- Added optional InjectSources argument for FromResolve and FromResolveGetter bind methods
+- Changed ZenjectEditorWindow to handle failures better
+- Added DisposeBlock class to make it easier to avoid unnecessary per frame memory allocations
+- Added StaticMemoryPool class for cases where you want to store a pool statically instead of inside a container
+- Added ability to combine Dispose pattern with PlaceholderFactory<> to pool objects without needing to explicitly create a MemoryPool class (see memory pool docs for details)
+- Added methods to expand and shrink memory pools.  Also added optional OnDestroy user method to handle shrink operations
+- Added ability to more easily pool facade/subcontainers
+- Added Resize() method to Memory Pool classes
+- Added FromComponentOnRoot bind method for game object contexts
+- Added ZenjectStreams class for easier integration with UniRx
+- Added FromMethodMultipleUntyped bind method
+- Renamed ByNewPrefab to ByNewContextPrefab
+- Added FromComponentOn/FromComponentsOn bind methods
+- Added FromComponentOnRoot/FromComponentsOnRoot bind methods
+
+## Version 5.5.1 (March 12, 2017)
 
 Fixed compatibility issue with UniRx + the different scripting runtimes
 
-###5.5.0 (March 7, 2018)
+## Version 5.5.0 (March 7, 2017)
 
 Minor release, mostly bug fixes
 
@@ -25,7 +179,7 @@ New features
 API changes
 - Removed support for TickableManager.IsPaused
 
-###5.4.0 (October 2, 2017)
+## Version 5.4.0 (October 2, 2017)
 
 Big change to the way integration tests work, and some better error output.
 
@@ -34,7 +188,7 @@ Big change to the way integration tests work, and some better error output.
 - Fixed signals that have value-type parameters to work properly with IL2CPP without a need for a reference wrapper class or anything
 - Added back .NET 3.5 Moq dll as an alternative to the newer Moq dll
 
-###5.3.0 (September 18, 2017)
+## Version 5.3.0 (September 18, 2017)
 
 Some optimizations, bug fixes, and a few new bind methods
 
@@ -67,7 +221,7 @@ Minor
 - Added more attributes to play more nicely with resharper
 - Changed to disable support for profiling Zenject methods by default (need to define ZEN_PROFILING_ENABLED)
 
-###5.2.0 (April 30, 2017)
+## Version 5.2.0 (April 30, 2017)
 
 Minor release with just a few fixes.
 
@@ -78,7 +232,7 @@ Minor release with just a few fixes.
 - Fixed to always trigger injection before the Awake event for MonoBehaviours attached to ProjectContext
 - Added new bind method FromScriptableObjectResource which doesn't instantiate the scriptable object (issue #218)
 
-###5.1.0 (April 3, 2017)
+## Version 5.1.0 (April 3, 2017)
 
 Notable
 - Fixes related to upgrading to Unity 5.6
@@ -103,7 +257,7 @@ Minor
 - Added an option to exclude self (current object) in FromComponentInChildren and FromComponentInParents
 - Fixed minor issue when using FromSubContainerResolve with factories
 
-###5.0.2 (March 5, 2017)
+## Version 5.0.2 (March 5, 2017)
 
 - Fixed to allow parameterized tests using double parameters in ZenjectIntegrationTestFixtures
 - Added another overload to BindMemoryPool to allow creating them directly without creating an empty subclass
@@ -117,11 +271,11 @@ Minor
 - Added a few missing factory bindings (FromComponentInHierarchy and FromNewScriptableObjectResource)
 - Fixed signal installer bindings to work properly with AsTransient and multi-bindings
 
-###5.0.1 (February 15, 2017)
+## Version 5.0.1 (February 15, 2017)
 
 - Hotfix.  Signal UniRx integration was completely broken
 
-###5.0 (February 13, 2017)
+## Version 5.0 (February 13, 2017)
 
 Summary
 
@@ -174,7 +328,7 @@ Bug fixes
 
 ---------
 
-###4.7 (November 6, 2016)
+## Version 4.7 (November 6, 2016)
 - Removed the concept of triggers in favour of just directly acting on the Signal to both subscribe and fire, since using Trigger was too much overhead for not enough gain
 - Fixed issue for Windows Store platform where zenject was not properly stripping out the WSA generated constructors
 - Changed to automatically choose the public constructor if faced with a choice between public and private
@@ -184,7 +338,7 @@ Bug fixes
 
 ---------
 
-###4.6 (October 23, 2016)
+## Version 4.6 (October 23, 2016)
 - Changed Validation to run at edit time rather than requiring that we enter play mode.  This is significantly faster.  Also added a hotkey to "validate then run" since it's fast enough to use as a pre-run check
 - Added InstantiateComponentOnNewGameObject method
 - Changed to install ScriptableObjectInstallers before MonoInstallers since it is common to include settings in ScriptableObjectInstallers (including settings for MonoInstallers)
@@ -203,7 +357,7 @@ Bug fixes
 
 ---------
 
-###4.5 (September 1, 2016)
+## Version 4.5 (September 1, 2016)
 - Fixed DiContainer.ResolveTypeAll() method to properly search in parent containers
 - Fixed exception that was occuring with Factories when using derived parameter types
 - Fixed FromResolve to properly search in parent containers
@@ -211,7 +365,7 @@ Bug fixes
 
 ---------
 
-###4.4 (July 23, 2016)
+## Version 4.4 (July 23, 2016)
 - Changed the way installers are called from other installers, to allow strongly typed parameter passing
 - Added untyped version of FromMethod
 - Added FromSiblingComponent bind method
@@ -221,7 +375,7 @@ Bug fixes
 
 ---------
 
-###4.3 (June 4, 2016)
+## Version 4.3 (June 4, 2016)
 - Changed to disallow using null with BindInstance by default, to catch these errors earlier
 - Changed to use UnityEngine.Object when referring to prefabs to allow people to get some stronger type checking of prefabs at edit time
 - (bug fix) for Hololens with Unity 5.4
@@ -230,7 +384,7 @@ Bug fixes
 
 ---------
 
-###4.2 (May 30, 2016)
+## Version 4.2 (May 30, 2016)
 - Finally updated the documentation
 - Renamed FromGetter to FromGetterResolve
 - Added some optimizations to convention binding
@@ -242,7 +396,7 @@ Bug fixes
 
 ---------
 
-###4.1 (May 15, 2016)
+## Version 4.1 (May 15, 2016)
 - Changed ResolveAll method to be optional by default, so it can return the empty list
 - Removed Zenject.Commands namespace in favour of just Zenject
 - Added convention based binding (eg. Container.Bind().To(x => x.AllTypes().DerivingFrom()))
@@ -263,7 +417,7 @@ Bug fixes
 
 ---------
 
-###4.0 (April 30, 2016)
+## Version 4.0 (April 30, 2016)
 - Added another property to CompositionRoot to specify installers as prefabs re #96
 - Changed global composition root to be a prefab instead of assembling together a bunch of ScriptableObject assets re #98
 - Changed to lookup Zenject Auto Binding components by default, without the need for AutoBindInstaller. Also added new properties such as CompositionRoot, identifier, and made Component a list. Also works now when put underneath GameObjectCompositionRoot's.
@@ -294,7 +448,7 @@ Bug fixes
 
 ---------
 
-###3.11 (May 15, 2016)
+## Version 3.11 (May 15, 2016)
 - Bug fix - Calling Resolve<> or Instantiate<> inside an installer was causing the object to be injected twice
 - Added StaticCompositionRoot as an even higher level container than ProjectCompositionRoot, for cases where you want to add dependencies directly to the Zenject assembly before Unity even starts up
 - Bug fix - loading the same scene multiple times with LoadSceneAdditive was not working
@@ -302,14 +456,14 @@ Bug fixes
 
 ---------
 
-###3.10 (March 26, 2016)
+## Version 3.10 (March 26, 2016)
 - Fixed to actually support Windows Store platform
 - Added pause/resume methods to TickableManager
 - Bug fix - OnlyInjectWhenActive flag did not work on root inactive game objects 
 
 ---------
 
-###3.9 (Feb 7, 2016)
+## Version 3.9 (Feb 7, 2016)
 - Added a lot more error checking when using the ToSingle bindings. It will no longer allow mixing different ToSingle types
 - Fixed ToSingleGameObject and ToSingleMonoBehaviour to allow multiple bindings to the same result
 - Made it easier to construct SceneCompositionRoot objects dynamically
@@ -320,12 +474,12 @@ Bug fixes
 
 ---------
 
-###3.8 (Feb 4, 2016)
+## Version 3.8 (Feb 4, 2016)
 - Changed back to only initializing the ProjectCompositionRoot when starting a scene with a SceneCompositionRoot rather than always starting it in every scene
 
 ---------
 
-###3.7 (Jan 31, 2016)
+## Version 3.7 (Jan 31, 2016)
 - Changed to not bother parenting transforms to the CompositionRoot object by default (This is still optional with a checkbox however)
 - Added string parameter to BindMonoBehaviourFactory method to allow specifying the name of an empty GameObject to use for organization
 - Changed FacadeFactory to inherit from IFactory
@@ -337,24 +491,24 @@ Bug fixes
 
 ---------
 
-###3.6 (Jan 24, 2016)
+## Version 3.6 (Jan 24, 2016)
 - Another change to signals to not require parameter types to the bind methods
 
 ---------
 
-###3.5 (Jan 17, 2016)
+## Version 3.5 (Jan 17, 2016)
 - Made breaking change to require separate bind commands for signals and triggers, to allow adding different conditionals on each.
 
 ---------
 
-###3.4 (Jan 7, 2016)
+## Version 3.4 (Jan 7, 2016)
 - Cleaned up directory structure
 - Fixed bug with Global bindings not getting their Tick() called in the correct order
 - Fixes to the releases automation scripts
 
 ---------
 
-###3.2 (December 20, 2015)
+## Version 3.2 (December 20, 2015)
 - Added the concept of "Commands" and "Signals".  See documentation for details.
 - Fixed validation for decorator scenes that open decorator scenes.
 - Changed to be more strict when using a combination of differents kinds of ToSingle<>, since there should only be one way to create the singleton.
@@ -374,13 +528,13 @@ Bug fixes
 
 ---------
 
-###3.1
+## Version 3.1
 - Changes related to upgrading to Unity 5.3
 - Fixed again to make zero heap allocations per frame
 
 ---------
 
-###3.0
+## Version 3.0
 - Added much better support for nested containers.  It now works more closely to what you might expect:  Any parent dependencies are always inherited in sub-containers, even for optional injectables.  Also removed BindScope and FallbackContainer since these were really just workarounds for this feature missing.  Also added [InjectLocal] attribute for cases where you want to inject dependencies only from the local container.
 - Changed the way execution order is specified in the installers.  Now the order for Initialize / Tick / Dispose are all given by one property similar to how unity does it, using ExecutionOrderInstaller
 - Added ability to pass arguments to Container.Install<>
@@ -390,18 +544,18 @@ Bug fixes
 
 ---------
 
-###2.8
+## Version 2.8
 * Fixed to properly use explicit default parameter values in Constructor/PostInject methods.  For eg: public Foo(int bar = 5) should consider bar to be optional and use 5 if not resolved.
 
 ---------
 
-###2.7
+## Version 2.7
 * Bug fix to ensure global composition root always gets initialized before the scene composition root
 * Changed scene decorators to use LoadLevelAdditive instead of LoadLevel to allow more complex setups involving potentially several decorators within decorators
 
 ---------
 
-###2.6
+## Version 2.6
 * Added new bind methods: ToResource, ToTransientPrefabResource, ToSinglePrefabResource
 * Added ability to have multiple sets of global installers
 * Fixed support for using zenject with .NET 4.5
@@ -415,7 +569,7 @@ Bug fixes
 
 ---------
 
-###2.5
+## Version 2.5
 * Added support for circular dependencies in the PostInject method or as fields (just not constructor parameters)
 * Fixed issue with identifiers that was occurring when having both [Inject] and [InjectOptional] attributes on a field/constructor parameter.  Now requires that only one be set
 * Removed BindValue in favour of just using Bind for both reference and value types for simplicity
@@ -424,24 +578,24 @@ Bug fixes
 
 ---------
 
-###2.4
+## Version 2.4
 * Refactored the way IFactory is used to be a lot cleaner. It now uses a kind of fluent syntax through its own bind method BindIFactory<>
 
 ---------
 
-###2.3
+## Version 2.3
 * Added "ParentContexts" property to InjectContext, to allow very complex conditional bindings that involve potentially several identifiers, etc.
 * Removed InjectionHelper class and moved methods into DiContainer to simplify API and also to be more discoverable
 * Added ability to build dlls for use in outside unity from the assembly build solution
 
 ---------
 
-###2.2
+## Version 2.2
 * Changed the way installers invoke other installers.  Previously you would Bind them to IInstaller and now you call Container.Install<MyInstaller> instead.  This is better because it allows you to immediately call Rebind<> afterwards
 
 ---------
 
-###2.1
+## Version 2.1
 * Simplified interface a bit more by moving more methods into DiContainer such as Inject and Instantiate.  Moved all helper methods into extension methods for readability. Deleted FieldsInjector and Instantiator classes as part of this
 * Renamed DiContainer.To() method to ToInstance since I had witnessed some confusion with it for new users.  Did the same with ToSingleInstance
 * Added support for using Zenject outside of Unity by building with the ZEN_NOT_UNITY3D define set
@@ -452,7 +606,7 @@ Bug fixes
 
 ---------
 
-###2.0
+## Version 2.0
 * Added ability to inject dependencies via parameters to the [PostInject] method just like it does with constructors.  Especially useful for MonoBehaviours.
 * Fixed the order that [PostInject] methods are called in for prefabs
 * Changed singletons created via ToSinglePrefab to identify based on identifier and prefab and not component type. This allows things like ToSingle<Foo>(prefab1) and ToSingle<Bar>(prefab1) to use the same prefab, so you can map singletons to multiple components on the same prefab. This also works with interfaces.
@@ -464,7 +618,7 @@ Bug fixes
 
 ---------
 
-###1.19
+## Version 1.19
 
 * Upgraded to Unity 5
 * Added an optional identifier to InjectOptional attribute
@@ -473,7 +627,7 @@ Bug fixes
 
 ---------
 
-###1.18
+## Version 1.18
 
 * Added minor optimizations to reduce per-frame allocation to zero
 * Fixed unit tests to be compatible with unity test tools
@@ -481,25 +635,25 @@ Bug fixes
 
 ---------
 
-###1.17
+## Version 1.17
 
 * Bug fix.  Was not forwarding parameters correctly when instantiating objects from prefabs
 
 ---------
 
-###1.16
+## Version 1.16
 
 * Removed the word 'ModestTree' from namespaces since Zenject is open source and not proprietary to the company ModestTree.
 
 ---------
 
-###1.15
+## Version 1.15
 
 * Fixed bug with ToSinglePrefab which was causing it to create multiple instances when used in different bindings.
 
 ---------
 
-###1.14
+## Version 1.14
 
 * Added flag to CompositionRoot for whether to inject into inactive game objects or ignore them completely
 * Added BindAllInterfacesToSingle method to DiContainer
@@ -509,13 +663,13 @@ Bug fixes
 
 ---------
 
-###1.13
+## Version 1.13
 
 * Minor bug fix to global composition root.  Also fixed a few compiler warnings.
 
 ---------
 
-###1.12
+## Version 1.12
 
 * Added Rebind<> method
 * Changed Factories to use strongly typed parameters by default.  Also added ability to pass in null values as arguments as well as multiple instances of the same type
@@ -528,20 +682,20 @@ Bug fixes
 
 ---------
 
-###1.11
+## Version 1.11
 
 * Removed Fasterflect library to keep Zenject nice and lightweight (it was also causing issues on WP8)
 * Fixed bug related to singletons + object graph validation. Changed the way IDisposables are handled to be closer to the way IInitializable and ITickable are handled. Added method to BinderUntyped.
 
 ---------
 
-###1.10
+## Version 1.10
 
 * Added custom editor for the Installers property of CompositionRoot to make re-ordering easier
 
 ---------
 
-###1.09
+## Version 1.09
 
 * Added support for nested containers
 * Added ability to execute bind commands using Type objects rather than a generic type
@@ -550,7 +704,7 @@ Bug fixes
 
 ---------
 
-###1.08
+## Version 1.08
 
 * Order of magnitude speed improvement by using more caching
 * Minor change to API to use the As() method to specify identifiers
@@ -558,14 +712,14 @@ Bug fixes
 
 ---------
 
-###1.07
+## Version 1.07
 
 * Simplified API by removing the concept of modules in favour of just having installers instead (and add support for installers installing other installers)
 * Bug fixes
 
 ---------
 
-###1.06
+## Version 1.06
 
 * Introduced concept of scene installer, renamed installers 'modules'
 * Bug fixes

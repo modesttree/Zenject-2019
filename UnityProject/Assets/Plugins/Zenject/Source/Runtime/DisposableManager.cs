@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModestTree;
+using ModestTree.Util;
 
 namespace Zenject
 {
@@ -17,26 +18,26 @@ namespace Zenject
             [Inject(Optional = true, Source = InjectSources.Local)]
             List<IDisposable> disposables,
             [Inject(Optional = true, Source = InjectSources.Local)]
-            List<ModestTree.Util.ValuePair<Type, int>> priorities,
+            List<ValuePair<Type, int>> priorities,
             [Inject(Optional = true, Source = InjectSources.Local)]
             List<ILateDisposable> lateDisposables,
             [Inject(Id = "Late", Optional = true, Source = InjectSources.Local)]
-            List<ModestTree.Util.ValuePair<Type, int>> latePriorities)
+            List<ValuePair<Type, int>> latePriorities)
         {
             foreach (var disposable in disposables)
             {
                 // Note that we use zero for unspecified priority
                 // This is nice because you can use negative or positive for before/after unspecified
-                var matches = priorities.Where(x => disposable.GetType().DerivesFromOrEqual(x.First)).Select(x => x.Second).ToList();
-                int priority = matches.IsEmpty() ? 0 : matches.Distinct().Single();
+                var match = priorities.Where(x => disposable.GetType().DerivesFromOrEqual(x.First)).Select(x => (int?)x.Second).SingleOrDefault();
+                int priority = match.HasValue ? match.Value : 0;
 
                 _disposables.Add(new DisposableInfo(disposable, priority));
             }
 
             foreach (var lateDisposable in lateDisposables)
             {
-                var matches = latePriorities.Where(x => lateDisposable.GetType().DerivesFromOrEqual(x.First)).Select(x => x.Second).ToList();
-                int priority = matches.IsEmpty() ? 0 : matches.Distinct().Single();
+                var match = latePriorities.Where(x => lateDisposable.GetType().DerivesFromOrEqual(x.First)).Select(x => (int?)x.Second).SingleOrDefault();
+                int priority = match.HasValue ? match.Value : 0;
 
                 _lateDisposables.Add(new LateDisposableInfo(lateDisposable, priority));
             }
@@ -53,10 +54,21 @@ namespace Zenject
                 new DisposableInfo(disposable, priority));
         }
 
+        public void AddLate(ILateDisposable disposable)
+        {
+            AddLate(disposable, 0);
+        }
+
+        public void AddLate(ILateDisposable disposable, int priority)
+        {
+            _lateDisposables.Add(
+                new LateDisposableInfo(disposable, priority));
+        }
+
         public void Remove(IDisposable disposable)
         {
             _disposables.RemoveWithConfirm(
-                _disposables.Where(x => x.Disposable == disposable).Single());
+                _disposables.Where(x => ReferenceEquals(x.Disposable, disposable)).Single());
         }
 
         public void LateDispose()
@@ -117,7 +129,7 @@ namespace Zenject
             }
         }
 
-        class DisposableInfo
+        struct DisposableInfo
         {
             public IDisposable Disposable;
             public int Priority;

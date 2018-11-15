@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Conditions
 {
@@ -40,7 +35,7 @@ namespace Zenject.Tests.Conditions
         [Test]
         public void TestBasic3()
         {
-            Container.Bind<Test0>().WithId("foo").FromMethod((ctx) => new Test0()).NonLazy();
+            Container.Bind<Test0>().WithId("foo").FromMethod(ctx => new Test0()).NonLazy();
 
             Assert.Throws(
                 delegate { Container.Resolve<Test0>(); });
@@ -66,7 +61,7 @@ namespace Zenject.Tests.Conditions
         [Test]
         public void TestFromMethodUntyped()
         {
-            Container.Bind(typeof(Test0)).FromMethod((ctx) => new Test0()).NonLazy();
+            Container.Bind(typeof(Test0)).FromMethod(ctx => new Test0()).NonLazy();
 
             Container.Resolve<Test0>();
         }

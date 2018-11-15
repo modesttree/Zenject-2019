@@ -1,8 +1,6 @@
 using System;
-using UnityEngine;
-using System.Collections;
-using Zenject;
 using ModestTree;
+using UnityEngine;
 
 namespace Zenject.Asteroids
 {
@@ -110,7 +108,7 @@ namespace Zenject.Asteroids
             public float maxSpeed;
         }
 
-        public class Factory : Factory<Asteroid>
+        public class Factory : PlaceholderFactory<Asteroid>
         {
         }
     }

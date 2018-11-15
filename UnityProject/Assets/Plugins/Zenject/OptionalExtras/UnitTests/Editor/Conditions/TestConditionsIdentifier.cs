@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Conditions
 {
@@ -27,7 +22,7 @@ namespace Zenject.Tests.Conditions
         class Test2
         {
             [Inject(Id ="foo")]
-            public Test0 name2 = null;
+            public Test0 name2;
         }
 
         [Test]

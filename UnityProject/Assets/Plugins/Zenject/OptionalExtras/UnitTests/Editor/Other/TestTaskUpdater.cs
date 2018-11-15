@@ -1,12 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using NUnit.Framework;
-using Zenject;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
 using ModestTree.Util;
+using NUnit.Framework;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Other
 {
@@ -25,8 +20,8 @@ namespace Zenject.Tests.Other
 
         public void BindTickable<TTickable>(int priority) where TTickable : ITickable
         {
-            _container.Bind<ITickable>().To<TTickable>().AsSingle();
-            _container.Bind<ModestTree.Util.ValuePair<Type, int>>().FromInstance(ModestTree.Util.ValuePair.New(typeof(TTickable), priority));
+            _container.BindInterfacesAndSelfTo<TTickable>().AsSingle();
+            _container.Bind<ValuePair<Type, int>>().FromInstance(ValuePair.New(typeof(TTickable), priority));
         }
 
         [Test]
@@ -39,10 +34,6 @@ namespace Zenject.Tests.Other
         // Test that tickables get called in the correct order
         public void TestOrder()
         {
-            _container.Bind<Tickable1>().AsSingle();
-            _container.Bind<Tickable2>().AsSingle();
-            _container.Bind<Tickable3>().AsSingle();
-
             BindTickable<Tickable3>(2);
             BindTickable<Tickable1>(0);
             BindTickable<Tickable2>(1);

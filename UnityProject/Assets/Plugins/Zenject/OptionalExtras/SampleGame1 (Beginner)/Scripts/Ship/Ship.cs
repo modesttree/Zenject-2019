@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Collections;
-using Zenject;
 
 #pragma warning disable 649
 #pragma warning disable 618
@@ -14,11 +10,16 @@ namespace Zenject.Asteroids
         [SerializeField]
         MeshRenderer _meshRenderer;
 
+#if UNITY_2018
+        [SerializeField]
+        ParticleSystem _particleSystem;
+#else
         [SerializeField]
         ParticleEmitter _particleEmitter;
+#endif
 
         ShipStateFactory _stateFactory;
-        ShipState _state = null;
+        ShipState _state;
 
         [Inject]
         public void Construct(ShipStateFactory stateFactory)
@@ -31,10 +32,17 @@ namespace Zenject.Asteroids
             get { return _meshRenderer; }
         }
 
+#if UNITY_2018
+        public ParticleSystem ParticleEmitter
+        {
+            get { return _particleSystem; }
+        }
+#else
         public ParticleEmitter ParticleEmitter
         {
             get { return _particleEmitter; }
         }
+#endif
 
         public Vector3 Position
         {

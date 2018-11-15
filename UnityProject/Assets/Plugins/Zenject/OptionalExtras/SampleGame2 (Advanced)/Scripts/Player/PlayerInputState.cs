@@ -1,5 +1,3 @@
-using System;
-
 namespace Zenject.SpaceFighter
 {
     public class PlayerInputState

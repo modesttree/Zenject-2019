@@ -4,6 +4,7 @@ using ModestTree;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class MethodProvider<TReturn> : IProvider
     {
         readonly DiContainer _container;
@@ -17,25 +18,39 @@ namespace Zenject
             _method = method;
         }
 
+        public bool IsCached
+        {
+            get { return false; }
+        }
+
+        public bool TypeVariesBasedOnMemberType
+        {
+            get { return false; }
+        }
+
         public Type GetInstanceType(InjectContext context)
         {
             return typeof(TReturn);
         }
 
-        public IEnumerator<List<object>> GetAllInstancesWithInjectSplit(InjectContext context, List<TypeValuePair> args)
+        public void GetAllInstancesWithInjectSplit(
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
         {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
             Assert.That(typeof(TReturn).DerivesFromOrEqual(context.MemberType));
 
-            if (_container.IsValidating && !DiContainer.CanCreateOrInjectDuringValidation(context.MemberType))
+            injectAction = null;
+            if (_container.IsValidating && !TypeAnalyzer.ShouldAllowDuringValidation(context.MemberType))
             {
-                yield return new List<object>() { new ValidationMarker(typeof(TReturn)) };
+                buffer.Add(new ValidationMarker(typeof(TReturn)));
             }
             else
             {
-                yield return new List<object>() { _method(context) };
+                // We cannot do a null assert here because in some cases they might intentionally
+                // return null
+                buffer.Add(_method(context));
             }
         }
     }

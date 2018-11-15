@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using ModestTree;
-using System.Linq;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class ConcreteBinderNonGeneric : FromBinderNonGeneric
     {
         public ConcreteBinderNonGeneric(
-            BindInfo bindInfo,
-            BindFinalizerWrapper finalizerWrapper)
-            : base(bindInfo, finalizerWrapper)
+            DiContainer bindContainer, BindInfo bindInfo,
+            BindStatement bindStatement)
+            : base(bindContainer, bindInfo, bindStatement)
         {
             ToSelf();
         }
@@ -22,9 +22,9 @@ namespace Zenject
 
             BindInfo.RequireExplicitScope = true;
             SubFinalizer = new ScopableBindingFinalizer(
-                BindInfo, SingletonTypes.FromNew, null,
-                (container, type) => new TransientProvider(
-                    type, container, BindInfo.Arguments, BindInfo.ConcreteIdentifier, BindInfo.ContextInfo));
+                BindInfo, (container, type) => new TransientProvider(
+                    type, container, BindInfo.Arguments, BindInfo.ContextInfo, BindInfo.ConcreteIdentifier,
+                    BindInfo.InstantiatedCallback));
 
             return this;
         }
@@ -41,10 +41,19 @@ namespace Zenject
 
         public FromBinderNonGeneric To(IEnumerable<Type> concreteTypes)
         {
-            BindingUtil.AssertIsDerivedFromTypes(concreteTypes, BindInfo.ContractTypes, BindInfo.InvalidBindResponse);
-
             BindInfo.ToChoice = ToChoices.Concrete;
-            BindInfo.ToTypes = concreteTypes.ToList();
+            BindInfo.ToTypes.Clear();
+            BindInfo.ToTypes.AddRange(concreteTypes);
+
+            if (BindInfo.ToTypes.Count > 1 && BindInfo.ContractTypes.Count > 1)
+            {
+                // Be more lenient in this case to behave similar to convention based bindings
+                BindInfo.InvalidBindResponse = InvalidBindResponses.Skip;
+            }
+            else
+            {
+                BindingUtil.AssertIsDerivedFromTypes(concreteTypes, BindInfo.ContractTypes, BindInfo.InvalidBindResponse);
+            }
 
             return this;
         }
@@ -62,7 +71,8 @@ namespace Zenject
             generator(new ConventionSelectTypesBinder(bindInfo));
 
             BindInfo.ToChoice = ToChoices.Concrete;
-            BindInfo.ToTypes = bindInfo.ResolveTypes();
+            BindInfo.ToTypes.Clear();
+            BindInfo.ToTypes.AddRange(bindInfo.ResolveTypes());
 
             return this;
         }

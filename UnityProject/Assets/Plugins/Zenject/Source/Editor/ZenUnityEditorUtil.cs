@@ -4,17 +4,44 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ModestTree;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using ModestTree;
 using UnityEngine.SceneManagement;
 
-namespace Zenject
+namespace Zenject.Internal
 {
     public static class ZenUnityEditorUtil
     {
-        // Don't use this
+        // Returns true if succeeds without errors
+        public static bool SaveThenRunPreserveSceneSetup(Action action)
+        {
+            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                var originalSceneSetup = EditorSceneManager.GetSceneManagerSetup();
+
+                try
+                {
+                    action();
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Log.ErrorException(e);
+                    return false;
+                }
+                finally
+                {
+                    EditorSceneManager.RestoreSceneManagerSetup(originalSceneSetup);
+                }
+            }
+
+            return false;
+        }
+
+        // Feel free to call this method from an editor script, or a unit test, etc.
+        // An exception will be thrown if any validation errors are encountered
         public static void ValidateCurrentSceneSetup()
         {
             bool encounteredError = false;
@@ -22,7 +49,7 @@ namespace Zenject
             Application.LogCallback logCallback = (condition, stackTrace, type) =>
             {
                 if (type == LogType.Error || type == LogType.Assert
-                        || type == LogType.Exception)
+                    || type == LogType.Exception)
                 {
                     encounteredError = true;
                 }
@@ -42,7 +69,7 @@ namespace Zenject
             }
             catch (Exception e)
             {
-                ModestTree.Log.ErrorException(e);
+                Log.ErrorException(e);
                 encounteredError = true;
             }
             finally
@@ -56,10 +83,11 @@ namespace Zenject
             }
         }
 
-        // Don't use this
+        // NOTE: An exception will be thrown if any validation errors are encountered
+        // Returns the number of scenes that successfully validated
         public static int ValidateAllActiveScenes()
         {
-            var activeScenePaths = UnityEditor.EditorBuildSettings.scenes.Where(x => x.enabled)
+            var activeScenePaths = EditorBuildSettings.scenes.Where(x => x.enabled)
                 .Select(x => x.path).ToList();
 
             foreach (var scenePath in activeScenePaths)
@@ -91,6 +119,68 @@ namespace Zenject
             }
         }
 
+        public static SceneContext GetSceneContextForScene(Scene scene)
+        {
+            var sceneContext = TryGetSceneContextForScene(scene);
+
+            Assert.IsNotNull(sceneContext,
+                "Could not find scene context for scene '{0}'", scene.name);
+
+            return sceneContext;
+        }
+
+        public static SceneContext TryGetSceneContextForScene(Scene scene)
+        {
+            if (!scene.isLoaded)
+            {
+                return null;
+            }
+
+            var sceneContexts = scene.GetRootGameObjects()
+                .SelectMany(x => x.GetComponentsInChildren<SceneContext>()).ToList();
+
+            if (sceneContexts.IsEmpty())
+            {
+                return null;
+            }
+
+            Assert.That(sceneContexts.Count == 1,
+                "Found multiple SceneContexts in scene '{0}'.  Expected a maximum of one.", scene.name);
+
+            return sceneContexts[0];
+        }
+
+        public static SceneDecoratorContext GetDecoratorContextForScene(Scene scene)
+        {
+            var decoratorContext = TryGetDecoratorContextForScene(scene);
+
+            Assert.IsNotNull(decoratorContext,
+                "Could not find decorator context for scene '{0}'", scene.name);
+
+            return decoratorContext;
+        }
+
+        public static SceneDecoratorContext TryGetDecoratorContextForScene(Scene scene)
+        {
+            if (!scene.isLoaded)
+            {
+                return null;
+            }
+
+            var decoratorContexts = scene.GetRootGameObjects()
+                .SelectMany(x => x.GetComponentsInChildren<SceneDecoratorContext>()).ToList();
+
+            if (decoratorContexts.IsEmpty())
+            {
+                return null;
+            }
+
+            Assert.That(decoratorContexts.Count == 1,
+                "Found multiple DecoratorContexts in scene '{0}'.  Expected a maximum of one.", scene.name);
+
+            return decoratorContexts[0];
+        }
+
         static IEnumerable<SceneContext> GetAllSceneContexts()
         {
             var decoratedSceneNames = new List<string>();
@@ -99,42 +189,35 @@ namespace Zenject
             {
                 var scene = EditorSceneManager.GetSceneAt(i);
 
-                var sceneContexts = scene.GetRootGameObjects()
-                    .SelectMany(x => x.GetComponentsInChildren<SceneContext>()).ToList();
+                var sceneContext = TryGetSceneContextForScene(scene);
+                var decoratorContext = TryGetDecoratorContextForScene(scene);
 
-                var decoratorContexts = scene.GetRootGameObjects()
-                    .SelectMany(x => x.GetComponentsInChildren<SceneDecoratorContext>()).ToList();
-
-                if (!sceneContexts.IsEmpty())
+                if (sceneContext != null)
                 {
-                    Assert.That(decoratorContexts.IsEmpty(),
+                    Assert.That(decoratorContext == null,
                         "Found both SceneDecoratorContext and SceneContext in the same scene '{0}'.  This is not allowed", scene.name);
 
-                    Assert.That(sceneContexts.IsLength(1),
-                        "Found multiple SceneContexts in scene '{0}'.  Expected a maximum of one.", scene.name);
+                    decoratedSceneNames.RemoveAll(x => sceneContext.ContractNames.Contains(x));
 
-                    var context = sceneContexts[0];
-
-                    decoratedSceneNames.RemoveAll(x => context.ContractNames.Contains(x));
-
-                    yield return context;
+                    yield return sceneContext;
                 }
-                else if (!decoratorContexts.IsEmpty())
+                else if (decoratorContext != null)
                 {
-                    Assert.That(decoratorContexts.IsLength(1),
-                        "Found multiple SceneDecoratorContexts in scene '{0}'.  Expected a maximum of one.", scene.name);
-
-                    var context = decoratorContexts[0];
-
-                    Assert.That(!string.IsNullOrEmpty(context.DecoratedContractName),
+                    Assert.That(!string.IsNullOrEmpty(decoratorContext.DecoratedContractName),
                         "Missing Decorated Contract Name on SceneDecoratorContext in scene '{0}'", scene.name);
 
-                    decoratedSceneNames.Add(context.DecoratedContractName);
+                    decoratedSceneNames.Add(decoratorContext.DecoratedContractName);
                 }
             }
 
             Assert.That(decoratedSceneNames.IsEmpty(),
                 "Found decorator scenes without a corresponding scene to decorator.  Missing scene contracts: {0}", decoratedSceneNames.Join(", "));
+        }
+
+        public static string ConvertAssetPathToAbsolutePath(string assetPath)
+        {
+            return Path.Combine(
+                Path.Combine(Path.GetFullPath(Application.dataPath), ".."), assetPath);
         }
 
         public static string ConvertFullAbsolutePathToAssetPath(string fullPath)
@@ -155,20 +238,20 @@ namespace Zenject
 
         public static string GetCurrentDirectoryAssetPathFromSelection()
         {
-            return ZenUnityEditorUtil.ConvertFullAbsolutePathToAssetPath(
+            return ConvertFullAbsolutePathToAssetPath(
                 GetCurrentDirectoryAbsolutePathFromSelection());
         }
 
         public static string GetCurrentDirectoryAbsolutePathFromSelection()
         {
-            var folderPath = ZenUnityEditorUtil.TryGetSelectedFolderPathInProjectsTab();
+            var folderPath = TryGetSelectedFolderPathInProjectsTab();
 
             if (folderPath != null)
             {
                 return folderPath;
             }
 
-            var filePath = ZenUnityEditorUtil.TryGetSelectedFilePathInProjectsTab();
+            var filePath = TryGetSelectedFilePathInProjectsTab();
 
             if (filePath != null)
             {
@@ -187,6 +270,26 @@ namespace Zenject
         {
             return GetSelectedPathsInProjectsTab()
                 .Where(x => File.Exists(x)).ToList();
+        }
+
+        public static List<string> GetSelectedAssetPathsInProjectsTab()
+        {
+            var paths = new List<string>();
+
+            UnityEngine.Object[] selectedAssets = Selection.GetFiltered(
+                typeof(UnityEngine.Object), SelectionMode.Assets);
+
+            foreach (var item in selectedAssets)
+            {
+                var assetPath = AssetDatabase.GetAssetPath(item);
+
+                if (!string.IsNullOrEmpty(assetPath))
+                {
+                    paths.Add(assetPath);
+                }
+            }
+
+            return paths;
         }
 
         public static List<string> GetSelectedPathsInProjectsTab()
@@ -210,6 +313,22 @@ namespace Zenject
             }
 
             return paths;
+        }
+
+        // Taken from http://wiki.unity3d.com/index.php?title=CreateScriptableObjectAsset
+        public static void SaveScriptableObjectAsset(
+            string path, ScriptableObject asset)
+        {
+            Assert.That(path.EndsWith(".asset"));
+
+            string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path);
+
+            AssetDatabase.CreateAsset(asset, assetPathAndName);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = asset;
         }
 
         // Note that the path is relative to the Assets folder

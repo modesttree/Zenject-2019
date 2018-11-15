@@ -1,8 +1,6 @@
 using System;
-using UnityEngine;
-using System.Collections;
-using Zenject;
 using ModestTree;
+using UnityEngine;
 
 namespace Zenject.Asteroids
 {
@@ -10,23 +8,23 @@ namespace Zenject.Asteroids
     {
         WaitingToStart,
         Playing,
-        GameOver,
+        GameOver
     }
 
     public class GameController : IInitializable, ITickable, IDisposable
     {
+        readonly SignalBus _signalBus;
         readonly Ship _ship;
         readonly AsteroidManager _asteroidSpawner;
 
-        ShipCrashedSignal _shipCrashedSignal;
         GameStates _state = GameStates.WaitingToStart;
         float _elapsedTime;
 
         public GameController(
             Ship ship, AsteroidManager asteroidSpawner,
-            ShipCrashedSignal shipCrashedSignal)
+            SignalBus signalBus)
         {
-            _shipCrashedSignal = shipCrashedSignal;
+            _signalBus = signalBus;
             _asteroidSpawner = asteroidSpawner;
             _ship = ship;
         }
@@ -47,12 +45,12 @@ namespace Zenject.Asteroids
 
             Cursor.visible = false;
 
-            _shipCrashedSignal += OnShipCrashed;
+            _signalBus.Subscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
         public void Dispose()
         {
-            _shipCrashedSignal -= OnShipCrashed;
+            _signalBus.Unsubscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
         public void Tick()

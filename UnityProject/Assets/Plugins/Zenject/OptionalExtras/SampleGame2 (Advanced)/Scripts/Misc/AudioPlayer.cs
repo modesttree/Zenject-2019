@@ -2,13 +2,7 @@ using UnityEngine;
 
 namespace Zenject.SpaceFighter
 {
-    public interface IAudioPlayer
-    {
-        void Play(AudioClip clip, float volume);
-        void Play(AudioClip clip);
-    }
-
-    public class AudioPlayer : IAudioPlayer
+    public class AudioPlayer
     {
         readonly Camera _camera;
 

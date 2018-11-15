@@ -2,70 +2,85 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModestTree;
+using Zenject.Internal;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class TransientProvider : IProvider
     {
         readonly DiContainer _container;
         readonly Type _concreteType;
-        readonly object _concreteIdentifier;
         readonly List<TypeValuePair> _extraArguments;
+        readonly object _concreteIdentifier;
+        readonly Action<InjectContext, object> _instantiateCallback;
 
         public TransientProvider(
             Type concreteType, DiContainer container,
-            List<TypeValuePair> extraArguments, object concreteIdentifier, string bindingContext)
+            IEnumerable<TypeValuePair> extraArguments, string bindingContext,
+            object concreteIdentifier,
+            Action<InjectContext, object> instantiateCallback)
         {
             Assert.That(!concreteType.IsAbstract(),
                 "Expected non-abstract type for given binding but instead found type '{0}'{1}",
-                concreteType, bindingContext == null ? "" : " when binding '{0}'".Fmt(bindingContext) );
+                concreteType, bindingContext == null ? "" : " when binding '{0}'".Fmt(bindingContext));
 
             _container = container;
             _concreteType = concreteType;
+            _extraArguments = extraArguments.ToList();
             _concreteIdentifier = concreteIdentifier;
-            _extraArguments = extraArguments;
+            _instantiateCallback = instantiateCallback;
         }
 
-        public TransientProvider(
-            Type concreteType, DiContainer container,
-            List<TypeValuePair> extraArguments)
-            : this(concreteType, container, extraArguments, null, null)
+        public bool IsCached
         {
+            get { return false; }
         }
 
-        public TransientProvider(
-            Type concreteType, DiContainer container)
-            : this(concreteType, container, new List<TypeValuePair>())
+        public bool TypeVariesBasedOnMemberType
         {
+            get { return _concreteType.IsOpenGenericType(); }
         }
 
         public Type GetInstanceType(InjectContext context)
         {
-            return _concreteType;
+            if (!_concreteType.DerivesFromOrEqual(context.MemberType))
+            {
+                return null;
+            }
+
+            return GetTypeToCreate(context.MemberType);
         }
 
-        public IEnumerator<List<object>> GetAllInstancesWithInjectSplit(InjectContext context, List<TypeValuePair> args)
+        public void GetAllInstancesWithInjectSplit(
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
         {
             Assert.IsNotNull(context);
 
-            bool autoInject = false;
-
             var instanceType = GetTypeToCreate(context.MemberType);
 
-            var injectArgs = new InjectArgs()
+            var extraArgs = ZenPools.SpawnList<TypeValuePair>();
+
+            extraArgs.AllocFreeAddRange(_extraArguments);
+            extraArgs.AllocFreeAddRange(args);
+
+            var instance = _container.InstantiateExplicit(instanceType, false, extraArgs, context, _concreteIdentifier);
+
+            injectAction = () =>
             {
-                ExtraArgs = _extraArguments.Concat(args).ToList(),
-                Context = context,
-                ConcreteIdentifier = _concreteIdentifier,
+                _container.InjectExplicit(
+                    instance, instanceType, extraArgs, context, _concreteIdentifier);
+
+                Assert.That(extraArgs.Count == 0);
+                ZenPools.DespawnList(extraArgs);
+
+                if (_instantiateCallback != null)
+                {
+                    _instantiateCallback(context, instance);
+                }
             };
 
-            var instance = _container.InstantiateExplicit(
-                instanceType, autoInject, injectArgs);
-
-            // Return before property/field/method injection to allow circular dependencies
-            yield return new List<object>() { instance };
-
-            _container.InjectExplicit(instance, instanceType, injectArgs);
+            buffer.Add(instance);
         }
 
         Type GetTypeToCreate(Type contractType)

@@ -1,8 +1,6 @@
-using UnityEngine;
-using System.Collections;
-using Zenject;
-using ModestTree;
 using System;
+using ModestTree;
+using UnityEngine;
 
 #pragma warning disable 649
 
@@ -17,9 +15,6 @@ namespace Zenject.Asteroids
 
         [SerializeField]
         GUIStyle _instructionsStyle;
-
-        [SerializeField]
-        GUIStyle _gameOverStyle;
 
         [SerializeField]
         GUIStyle _timeStyle;
@@ -37,14 +32,14 @@ namespace Zenject.Asteroids
         float _restartTextFadeInTime;
 
         float _gameOverElapsed;
-        ShipCrashedSignal _shipCrashedSignal;
+        SignalBus _signalBus;
 
         [Inject]
         public void Construct(
-            GameController gameController, ShipCrashedSignal shipCrashedSignal)
+            GameController gameController, SignalBus signalBus)
         {
             _gameController = gameController;
-            _shipCrashedSignal = shipCrashedSignal;
+            _signalBus = signalBus;
         }
 
         void OnGUI()
@@ -206,12 +201,12 @@ namespace Zenject.Asteroids
 
         public void Initialize()
         {
-            _shipCrashedSignal += OnShipCrashed;
+            _signalBus.Subscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
         public void Dispose()
         {
-            _shipCrashedSignal -= OnShipCrashed;
+            _signalBus.Unsubscribe<ShipCrashedSignal>(OnShipCrashed);
         }
 
         void OnShipCrashed()

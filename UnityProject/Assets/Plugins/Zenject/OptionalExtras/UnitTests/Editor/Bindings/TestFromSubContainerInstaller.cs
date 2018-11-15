@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -16,7 +11,9 @@ namespace Zenject.Tests.Bindings
         {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
-            Assert.IsNotNull(Container.Resolve<Foo>().Bar);
+            var foo = Container.Resolve<Foo>();
+            Assert.IsNotNull(foo.Bar);
+            Assert.IsEqual(foo, Container.Resolve<Foo>());
         }
 
         [Test]
@@ -24,22 +21,25 @@ namespace Zenject.Tests.Bindings
         {
             Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsTransient().NonLazy();
 
-            Assert.IsNotNull(Container.Resolve<Foo>().Bar);
+            var foo = Container.Resolve<Foo>();
+            Assert.IsNotNull(foo.Bar);
+            Assert.IsNotEqual(foo, Container.Resolve<Foo>());
         }
 
         [Test]
         public void TestInstallerSelfCached()
         {
-            Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsCached().NonLazy();
+            Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
-            Assert.IsNotNull(Container.Resolve<Foo>().Bar);
+            var foo = Container.Resolve<Foo>();
+            Assert.IsNotNull(foo.Bar);
+            Assert.IsEqual(foo, Container.Resolve<Foo>());
         }
 
         [Test]
         public void TestInstallerSelfSingleMultipleContracts()
         {
-            Container.Bind<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
-            Container.Bind<Bar>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
+            Container.Bind(typeof(Foo), typeof(Bar)).FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>().Bar, Container.Resolve<Bar>());
         }
@@ -47,7 +47,7 @@ namespace Zenject.Tests.Bindings
         [Test]
         public void TestInstallerSelfCachedMultipleContracts()
         {
-            Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsCached().NonLazy();
+            Container.Bind(typeof(Foo), typeof(IFoo)).To<Foo>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>(), Container.Resolve<IFoo>());
         }
@@ -55,7 +55,7 @@ namespace Zenject.Tests.Bindings
         [Test]
         public void TestInstallerSelfSingleMultipleMatches()
         {
-            Container.Bind<Qux>().FromSubContainerResolve().ByInstaller<FooInstaller>().AsSingle().NonLazy();
+            Container.Bind<Qux>().FromSubContainerResolveAll().ByInstaller<FooInstaller>().AsSingle().NonLazy();
 
             Assert.IsEqual(Container.ResolveAll<Qux>().Count, 2);
         }
@@ -121,3 +121,4 @@ namespace Zenject.Tests.Bindings
         }
     }
 }
+

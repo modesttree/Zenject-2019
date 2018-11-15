@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -13,63 +9,87 @@ namespace Zenject.Tests.Bindings
         [Test]
         public void TestTransient()
         {
-            Container.Bind<Foo>().AsSingle().NonLazy();
-            Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar).AsTransient().NonLazy();
+            Container.Bind<Foo>().AsSingle();
+            Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar);
 
             Assert.IsNotNull(Container.Resolve<Bar>());
             Assert.IsEqual(Container.Resolve<Bar>(), Container.Resolve<Foo>().Bar);
-
-            Foo.NumCalls = 0;
-
-            Container.Resolve<Bar>();
-            Container.Resolve<Bar>();
-            Container.Resolve<Bar>();
-
-            Assert.IsEqual(Foo.NumCalls, 3);
         }
 
         [Test]
-        public void TestCached()
+        public void TestSingleFailure()
         {
-            Container.Bind<Foo>().AsSingle().NonLazy();
-            Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar).AsCached().NonLazy();
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Bar>().FromResolveGetter<Foo>(x => x.Bar).AsSingle();
 
-            Foo.NumCalls = 0;
-
-            Container.Resolve<Bar>();
-            Container.Resolve<Bar>();
-            Container.Resolve<Bar>();
-
-            Assert.IsEqual(Foo.NumCalls, 1);
+            Assert.Throws(() => Container.Resolve<Bar>());
         }
 
         [Test]
-        public void TestSingle()
+        public void TestMultiple()
         {
-            Container.Bind<Foo>().AsSingle().NonLazy();
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Bar>().FromResolveAllGetter<Foo>(x => x.Bar).AsSingle();
 
-            Container.Bind<Bar>().FromResolveGetter<Foo>(BarGetter).AsSingle().NonLazy();
-
-            // Not sure why I need to specify the "<Bar,"
-            Container.Bind<IBar>().To<Bar>().FromResolveGetter<Foo>(BarGetter).AsSingle().NonLazy();
-
-            Foo.NumCalls = 0;
-
-            Assert.IsEqual(Container.Resolve<Bar>(), Foo.StaticBar);
-            Assert.IsEqual(Container.Resolve<IBar>(), Foo.StaticBar);
-
-            Container.Resolve<Bar>();
-            Container.Resolve<Bar>();
-            Container.Resolve<IBar>();
-            Container.Resolve<IBar>();
-            Container.Resolve<Bar>();
-
-            Assert.IsEqual(Foo.NumCalls, 1);
+            Assert.IsEqual(Container.ResolveAll<Bar>().Count, 2);
         }
 
-        Bar BarGetter(Foo foo)
+        [Test]
+        public void TestInjectSource1()
         {
-            return foo.Bar;
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Foo>().AsCached();
+
+            var subContainer = Container.CreateSubContainer();
+            subContainer.Bind<Foo>().AsCached();
+
+            subContainer.Bind<Bar>().FromResolveAllGetter<Foo>(x => x.Bar);
+
+            Assert.IsEqual(subContainer.ResolveAll<Bar>().Count, 3);
+        }
+
+        [Test]
+        public void TestInjectSource2()
+        {
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Foo>().AsCached();
+
+            var subContainer = Container.CreateSubContainer();
+            subContainer.Bind<Foo>().AsCached();
+
+            subContainer.Bind<Bar>().FromResolveAllGetter<Foo>(null, x => x.Bar, InjectSources.Local);
+
+            Assert.IsEqual(subContainer.ResolveAll<Bar>().Count, 1);
+        }
+
+        [Test]
+        public void TestInjectSource3()
+        {
+            Container.Bind<Foo>().AsCached();
+            Container.Bind<Foo>().AsCached();
+
+            var subContainer = Container.CreateSubContainer();
+            subContainer.Bind<Foo>().AsCached();
+
+            subContainer.Bind<Bar>().FromResolveGetter<Foo>(null, x => x.Bar);
+
+            Assert.IsNotNull(subContainer.Resolve<Bar>());
+        }
+
+        [Test]
+        public void TestInjectSource4()
+        {
+            Container.Bind<Foo>().AsCached();
+
+            var subContainer = Container.CreateSubContainer();
+            subContainer.Bind<Foo>().AsCached();
+            subContainer.Bind<Foo>().AsCached();
+
+            subContainer.Bind<Bar>().FromResolveGetter<Foo>(null, x => x.Bar, InjectSources.Parent);
+
+            Assert.IsEqual(subContainer.ResolveAll<Bar>().Count, 1);
         }
 
         interface IBar
@@ -82,21 +102,14 @@ namespace Zenject.Tests.Bindings
 
         class Foo
         {
-            public static int NumCalls = 0;
-            public static Bar StaticBar;
-
             public Foo()
             {
-                StaticBar = new Bar();
+                Bar = new Bar();
             }
 
             public Bar Bar
             {
-                get
-                {
-                    NumCalls++;
-                    return StaticBar;
-                }
+                get; private set;
             }
         }
     }

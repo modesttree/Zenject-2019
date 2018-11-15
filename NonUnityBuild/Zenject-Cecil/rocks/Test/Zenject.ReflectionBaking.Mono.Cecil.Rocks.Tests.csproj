@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\Mono.Cecil.Tests.settings" />
+  <PropertyGroup>
+    <ProjectGuid>{C6CFD7E1-B855-44DC-B4CE-9CD72984AF52}</ProjectGuid>
+    <RootNamespace>Zenject.ReflectionBaking.Mono.Cecil.Rocks.Tests</RootNamespace>
+    <AssemblyName>Zenject.ReflectionBaking.Mono.Cecil.Rocks.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Zenject.ReflectionBaking.Mono.Cecil.csproj">
+      <Project>{D68133BD-1E63-496E-9EDE-4FBDBF77B486}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Test\Zenject.ReflectionBaking.Mono.Cecil.Tests.csproj">
+      <Project>{A47B1F49-A81A-43E8-BE6B-DD28AF2C4055}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil.Tests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Zenject.ReflectionBaking.Mono.Cecil.Rocks.csproj">
+      <Project>{FBC6DD59-D09D-499C-B03C-99C1C78FF2AC}</Project>
+      <Name>Zenject.ReflectionBaking.Mono.Cecil.Rocks</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Mono.Cecil.Tests\MethodDefinitionRocksTests.cs" />
+    <Compile Include="Mono.Cecil.Tests\ModuleDefinitionRocksTests.cs" />
+    <Compile Include="Mono.Cecil.Tests\SecurityDeclarationRocksTests.cs" />
+    <Compile Include="Mono.Cecil.Tests\TypeDefinitionRocksTests.cs" />
+    <Compile Include="Mono.Cecil.Tests\TypeReferenceRocksTests.cs" />
+    <Content Include="Resources\cs\Types.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\assemblies\decsec-att.dll" />
+    <Content Include="Resources\assemblies\decsec-xml.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

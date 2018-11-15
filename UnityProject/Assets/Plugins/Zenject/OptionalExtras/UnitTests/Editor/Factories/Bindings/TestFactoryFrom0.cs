@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -36,9 +31,35 @@ namespace Zenject.Tests.Bindings
         }
 
         [Test]
+        public void TestFactoryScopeDefault()
+        {
+            Container.BindFactory<Foo, Foo.Factory>();
+
+            Assert.IsEqual(Container.Resolve<Foo.Factory>(), Container.Resolve<Foo.Factory>());
+        }
+
+        [Test]
+        public void TestFactoryScopeTransient()
+        {
+            Container.BindFactory<Foo, Foo.Factory>().AsTransient();
+
+            Assert.IsNotEqual(Container.Resolve<Foo.Factory>(), Container.Resolve<Foo.Factory>());
+        }
+
+        [Test]
         public void TestConcrete()
         {
             Container.BindFactory<IFoo, IFooFactory>().To<Foo>().NonLazy();
+
+            Assert.IsNotNull(Container.Resolve<IFooFactory>().Create());
+
+            Assert.That(Container.Resolve<IFooFactory>().Create() is Foo);
+        }
+
+        [Test]
+        public void TestConcreteUntyped()
+        {
+            Container.BindFactory<IFoo, IFooFactory>().To(typeof(Foo)).NonLazy();
 
             Assert.IsNotNull(Container.Resolve<IFooFactory>().Create());
 
@@ -49,13 +70,13 @@ namespace Zenject.Tests.Bindings
         {
         }
 
-        class IFooFactory : Factory<IFoo>
+        class IFooFactory : PlaceholderFactory<IFoo>
         {
         }
 
         class Foo : IFoo
         {
-            public class Factory : Factory<Foo>
+            public class Factory : PlaceholderFactory<Foo>
             {
             }
         }

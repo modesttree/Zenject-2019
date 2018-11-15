@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class GameObjectCreationParameters
     {
         public string Name
@@ -50,12 +51,12 @@ namespace Zenject
             unchecked // Overflow is fine, just wrap
             {
                 int hash = 17;
-                hash = hash * 29 + (this.Name == null ? 0 : this.Name.GetHashCode());
-                hash = hash * 29 + (this.GroupName == null ? 0 : this.GroupName.GetHashCode());
-                hash = hash * 29 + (this.ParentTransform == null ? 0 : this.ParentTransform.GetHashCode());
-                hash = hash * 29 + (this.ParentTransformGetter == null ? 0 : this.ParentTransformGetter.GetHashCode());
-                hash = hash * 29 + (!this.Position.HasValue ? 0 : this.Position.Value.GetHashCode());
-                hash = hash * 29 + (!this.Rotation.HasValue ? 0 : this.Rotation.Value.GetHashCode());
+                hash = hash * 29 + (Name == null ? 0 : Name.GetHashCode());
+                hash = hash * 29 + (GroupName == null ? 0 : GroupName.GetHashCode());
+                hash = hash * 29 + (ParentTransform == null ? 0 : ParentTransform.GetHashCode());
+                hash = hash * 29 + (ParentTransformGetter == null ? 0 : ParentTransformGetter.GetHashCode());
+                hash = hash * 29 + (!Position.HasValue ? 0 : Position.Value.GetHashCode());
+                hash = hash * 29 + (!Rotation.HasValue ? 0 : Rotation.Value.GetHashCode());
                 return hash;
             }
         }
@@ -67,10 +68,8 @@ namespace Zenject
                 GameObjectCreationParameters otherId = (GameObjectCreationParameters)other;
                 return otherId == this;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public bool Equals(GameObjectCreationParameters that)
@@ -80,8 +79,8 @@ namespace Zenject
 
         public static bool operator ==(GameObjectCreationParameters left, GameObjectCreationParameters right)
         {
-            return object.Equals(left.Name, right.Name)
-                && object.Equals(left.GroupName, right.GroupName);
+            return Equals(left.Name, right.Name)
+                && Equals(left.GroupName, right.GroupName);
         }
 
         public static bool operator !=(GameObjectCreationParameters left, GameObjectCreationParameters right)

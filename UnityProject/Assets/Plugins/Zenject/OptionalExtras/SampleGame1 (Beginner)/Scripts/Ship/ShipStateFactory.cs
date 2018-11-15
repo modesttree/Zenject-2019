@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using System.Collections;
-using Zenject;
 using ModestTree;
 
 namespace Zenject.Asteroids
@@ -12,7 +7,7 @@ namespace Zenject.Asteroids
         Moving,
         Dead,
         WaitingToStart,
-        Count,
+        Count
     }
 
     public class ShipStateFactory

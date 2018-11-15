@@ -1,0 +1,14 @@
+{
+    "name": "Zenject-IntegrationTests-Editor",
+    "references": [
+        "Zenject-TestFramework",
+        "Zenject",
+        "Zenject-IntegrationTests"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

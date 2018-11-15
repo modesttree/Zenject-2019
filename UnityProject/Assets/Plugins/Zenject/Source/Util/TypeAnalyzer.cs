@@ -1,316 +1,275 @@
-using ModestTree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using ModestTree;
+using Zenject.Internal;
+
+#if !NOT_UNITY3D
+#endif
 
 namespace Zenject
 {
+    public delegate InjectTypeInfo ZenTypeInfoGetter();
+
+    public enum ReflectionBakingCoverageModes
+    {
+        FallbackToDirectReflection,
+        NoCheckAssumeFullCoverage,
+        FallbackToDirectReflectionWithWarning
+    }
+
     public static class TypeAnalyzer
     {
-        static Dictionary<Type, ZenjectTypeInfo> _typeInfo = new Dictionary<Type, ZenjectTypeInfo>();
+        static Dictionary<Type, InjectTypeInfo> _typeInfo = new Dictionary<Type, InjectTypeInfo>();
 
-        public static ZenjectTypeInfo GetInfo<T>()
+#if UNITY_EDITOR
+        // We store this separately from InjectTypeInfo because this flag is needed for contract
+        // types whereas InjectTypeInfo is only needed for types that are instantiated, and
+        // we want to minimize the types that generate InjectTypeInfo for
+        static Dictionary<Type, bool> _allowDuringValidation = new Dictionary<Type, bool>();
+#endif
+
+        // Use double underscores for generated methods since this is also what the C# compiler does
+        // for things like anonymous methods
+        public const string ReflectionBakingGetInjectInfoMethodName = "__zenCreateInjectTypeInfo";
+        public const string ReflectionBakingFactoryMethodName = "__zenCreate";
+        public const string ReflectionBakingInjectMethodPrefix = "__zenInjectMethod";
+        public const string ReflectionBakingFieldSetterPrefix = "__zenFieldSetter";
+        public const string ReflectionBakingPropertySetterPrefix = "__zenPropertySetter";
+
+        public static ReflectionBakingCoverageModes ReflectionBakingCoverageMode
+        {
+            get; set;
+        }
+
+        public static bool ShouldAllowDuringValidation<T>()
+        {
+            return ShouldAllowDuringValidation(typeof(T));
+        }
+
+#if !UNITY_EDITOR
+        public static bool ShouldAllowDuringValidation(Type type)
+        {
+            return false;
+        }
+#else
+        public static bool ShouldAllowDuringValidation(Type type)
+        {
+            bool shouldAllow;
+
+            if (!_allowDuringValidation.TryGetValue(type, out shouldAllow))
+            {
+                shouldAllow = ShouldAllowDuringValidationInternal(type);
+                _allowDuringValidation.Add(type, shouldAllow);
+            }
+
+            return shouldAllow;
+        }
+
+        static bool ShouldAllowDuringValidationInternal(Type type)
+        {
+            // During validation, do not instantiate or inject anything except for
+            // Installers, IValidatable's, or types marked with attribute ZenjectAllowDuringValidation
+            // You would typically use ZenjectAllowDuringValidation attribute for data that you
+            // inject into factories
+
+            if (type.DerivesFrom<IInstaller>() || type.DerivesFrom<IValidatable>())
+            {
+                return true;
+            }
+
+#if !NOT_UNITY3D
+            if (type.DerivesFrom<Context>())
+            {
+                return true;
+            }
+#endif
+
+            return type.HasAttribute<ZenjectAllowDuringValidationAttribute>();
+        }
+#endif
+
+        public static bool HasInfo<T>()
+        {
+            return HasInfo(typeof(T));
+        }
+
+        public static bool HasInfo(Type type)
+        {
+            return TryGetInfo(type) != null;
+        }
+
+        public static InjectTypeInfo GetInfo<T>()
         {
             return GetInfo(typeof(T));
         }
 
-        public static ZenjectTypeInfo GetInfo(Type type)
+        public static InjectTypeInfo GetInfo(Type type)
         {
-#if UNITY_EDITOR && ZEN_PROFILING_ENABLED
+            var info = TryGetInfo(type);
+            Assert.IsNotNull(info, "Unable to get type info for type '{0}'", type);
+            return info;
+        }
+
+        public static InjectTypeInfo TryGetInfo<T>()
+        {
+            return TryGetInfo(typeof(T));
+        }
+
+        public static InjectTypeInfo TryGetInfo(Type type)
+        {
+            InjectTypeInfo info;
+
+#if ZEN_MULTITHREADING
+            lock (_typeInfo)
+#endif
+            {
+                if (_typeInfo.TryGetValue(type, out info))
+                {
+                    return info;
+                }
+            }
+
+#if UNITY_EDITOR
             using (ProfileBlock.Start("Zenject Reflection"))
 #endif
             {
-                Assert.That(!type.IsAbstract(),
-                    "Tried to analyze abstract type '{0}'.  This is not currently allowed.", type);
+                info = GetInfoInternal(type);
+            }
 
-                ZenjectTypeInfo info;
+            if (info != null)
+            {
+                Assert.IsEqual(info.Type, type);
+                Assert.IsNull(info.BaseTypeInfo);
+
+                var baseType = type.BaseType();
+
+                if (baseType != null && ShouldAnalyzeType(baseType))
+                {
+                    info.BaseTypeInfo = TryGetInfo(baseType);
+                }
+            }
 
 #if ZEN_MULTITHREADING
-                lock (_typeInfo)
+            lock (_typeInfo)
 #endif
+            {
+                _typeInfo.Add(type, info);
+            }
+
+            return info;
+        }
+
+        static InjectTypeInfo GetInfoInternal(Type type)
+        {
+            if (!ShouldAnalyzeType(type))
+            {
+                return null;
+            }
+
+#if ZEN_INTERNAL_PROFILING
+            // Make sure that the static constructor logic doesn't inflate our profile measurements
+            using (ProfileTimers.CreateTimedBlock("User Code"))
+            {
+                RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+            }
+#endif
+
+#if ZEN_INTERNAL_PROFILING
+            using (ProfileTimers.CreateTimedBlock("Type Analysis - Calling Baked Reflection Getter"))
+#endif
+            {
+                var getInfoMethod = type.GetMethod(
+                    ReflectionBakingGetInjectInfoMethodName,
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+                if (getInfoMethod != null)
                 {
-                    if (!_typeInfo.TryGetValue(type, out info))
-                    {
-                        info = CreateTypeInfo(type);
-                        _typeInfo.Add(type, info);
-                    }
+#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
+                    var infoGetter = (ZenTypeInfoGetter)getInfoMethod.CreateDelegate(
+                        typeof(ZenTypeInfoGetter), null);
+#else
+                    var infoGetter = ((ZenTypeInfoGetter)Delegate.CreateDelegate(
+                        typeof(ZenTypeInfoGetter), getInfoMethod));
+#endif
+
+                    return infoGetter();
                 }
-
-                return info;
             }
-        }
 
-        static ZenjectTypeInfo CreateTypeInfo(Type type)
-        {
-            var constructor = GetInjectConstructor(type);
-
-            return new ZenjectTypeInfo(
-                type,
-                GetPostInjectMethods(type),
-                constructor,
-                GetFieldInjectables(type).ToList(),
-                GetPropertyInjectables(type).ToList(),
-                GetConstructorInjectables(type, constructor).ToList());
-        }
-
-        static IEnumerable<InjectableInfo> GetConstructorInjectables(Type parentType, ConstructorInfo constructorInfo)
-        {
-            if (constructorInfo == null)
+            if (ReflectionBakingCoverageMode == ReflectionBakingCoverageModes.NoCheckAssumeFullCoverage)
             {
-                return Enumerable.Empty<InjectableInfo>();
+                // If we are confident that the reflection baking supplies all the injection information,
+                // then we can avoid the costs of doing reflection on types that were not covered
+                // by the baking
+                return null;
             }
-
-            return constructorInfo.GetParameters().Select(
-                paramInfo => CreateInjectableInfoForParam(parentType, paramInfo));
-        }
-
-        static InjectableInfo CreateInjectableInfoForParam(
-            Type parentType, ParameterInfo paramInfo)
-        {
-            var injectAttributes = paramInfo.AllAttributes<InjectAttributeBase>().ToList();
-
-            Assert.That(injectAttributes.Count <= 1,
-                "Found multiple 'Inject' attributes on type parameter '{0}' of type '{1}'.  Parameter should only have one", paramInfo.Name, parentType);
-
-            var injectAttr = injectAttributes.SingleOrDefault();
-
-            object identifier = null;
-            bool isOptional = false;
-            InjectSources sourceType = InjectSources.Any;
-
-            if (injectAttr != null)
-            {
-                identifier = injectAttr.Id;
-                isOptional = injectAttr.Optional;
-                sourceType = injectAttr.Source;
-            }
-
-            bool isOptionalWithADefaultValue = (paramInfo.Attributes & ParameterAttributes.HasDefault) == ParameterAttributes.HasDefault;
-
-            return new InjectableInfo(
-                isOptionalWithADefaultValue || isOptional,
-                identifier,
-                paramInfo.Name,
-                paramInfo.ParameterType,
-                parentType,
-                null,
-                isOptionalWithADefaultValue ? paramInfo.DefaultValue : null,
-                sourceType);
-        }
-
-        static List<PostInjectableInfo> GetPostInjectMethods(Type type)
-        {
-            // Note that unlike with fields and properties we use GetCustomAttributes
-            // This is so that we can ignore inherited attributes, which is necessary
-            // otherwise a base class method marked with [Inject] would cause all overridden
-            // derived methods to be added as well
-            var methods = type.GetAllInstanceMethods()
-                .Where(x => x.GetCustomAttributes(typeof(InjectAttribute), false).Any()).ToList();
-
-            var heirarchyList = type.Yield().Concat(type.GetParentTypes()).Reverse().ToList();
-
-            // Order by base classes first
-            // This is how constructors work so it makes more sense
-            var values = methods.OrderBy(x => heirarchyList.IndexOf(x.DeclaringType));
-
-            var postInjectInfos = new List<PostInjectableInfo>();
-
-            foreach (var methodInfo in values)
-            {
-                var paramsInfo = methodInfo.GetParameters();
-
-                var injectAttr = methodInfo.AllAttributes<InjectAttribute>().Single();
-                Assert.That(!injectAttr.Optional && injectAttr.Id == null && injectAttr.Source == InjectSources.Any,
-                    "Parameters of InjectAttribute do not apply to constructors and methods");
-
-                postInjectInfos.Add(
-                    new PostInjectableInfo(
-                        methodInfo,
-                        paramsInfo.Select(paramInfo =>
-                            CreateInjectableInfoForParam(type, paramInfo)).ToList()));
-            }
-
-            return postInjectInfos;
-        }
-
-        static IEnumerable<InjectableInfo> GetPropertyInjectables(Type type)
-        {
-            var propInfos = type.GetAllInstanceProperties()
-                .Where(x => x.HasAttribute(typeof(InjectAttributeBase)));
-
-            foreach (var propInfo in propInfos)
-            {
-                yield return CreateForMember(propInfo, type);
-            }
-        }
-
-        static IEnumerable<InjectableInfo> GetFieldInjectables(Type type)
-        {
-            var fieldInfos = type.GetAllInstanceFields()
-                .Where(x => x.HasAttribute(typeof(InjectAttributeBase)));
-
-            foreach (var fieldInfo in fieldInfos)
-            {
-                yield return CreateForMember(fieldInfo, type);
-            }
-        }
 
 #if !(UNITY_WSA && ENABLE_DOTNET) || UNITY_EDITOR
-        private static IEnumerable<FieldInfo> GetAllFields(Type t, BindingFlags flags)
-        {
-            if (t == null)
+            if (ReflectionBakingCoverageMode == ReflectionBakingCoverageModes.FallbackToDirectReflectionWithWarning)
             {
-                return Enumerable.Empty<FieldInfo>();
+                Log.Warn("No reflection baking information found for type '{0}' - using more costly direct reflection instead", type);
             }
-
-            return t.GetFields(flags).Concat(GetAllFields(t.BaseType, flags)).Distinct();
-        }
-
-        private static Action<object, object> GetOnlyPropertySetter(
-            Type parentType,
-            string propertyName)
-        {
-            Assert.That(parentType != null);
-            Assert.That(!string.IsNullOrEmpty(propertyName));
-
-            var allFields = GetAllFields(
-                parentType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy).ToList();
-
-            var writeableFields = allFields.Where(f => f.Name == string.Format("<{0}>k__BackingField", propertyName)).ToList();
-
-            if (!writeableFields.Any())
-            {
-                throw new ZenjectException(string.Format(
-                    "Can't find backing field for get only property {0} on {1}.\r\n{2}",
-                    propertyName, parentType.FullName, string.Join(";", allFields.Select(f => f.Name).ToArray())));
-            }
-
-			return (injectable, value) => writeableFields.ForEach(f => f.SetValue(injectable, value));
-		}
 #endif
 
-		static InjectableInfo CreateForMember(MemberInfo memInfo, Type parentType)
-        {
-            var injectAttributes = memInfo.AllAttributes<InjectAttributeBase>().ToList();
-
-            Assert.That(injectAttributes.Count <= 1,
-                "Found multiple 'Inject' attributes on type field '{0}' of type '{1}'.  Field should only container one Inject attribute", memInfo.Name, parentType);
-
-            var injectAttr = injectAttributes.SingleOrDefault();
-
-            object identifier = null;
-            bool isOptional = false;
-            InjectSources sourceType = InjectSources.Any;
-
-            if (injectAttr != null)
-            {
-                identifier = injectAttr.Id;
-                isOptional = injectAttr.Optional;
-                sourceType = injectAttr.Source;
-            }
-
-            Type memberType;
-            Action<object, object> setter;
-
-            if (memInfo is FieldInfo)
-            {
-                var fieldInfo = (FieldInfo)memInfo;
-                setter = ((object injectable, object value) => fieldInfo.SetValue(injectable, value));
-                memberType = fieldInfo.FieldType;
-            }
-            else
-            {
-                Assert.That(memInfo is PropertyInfo);
-                var propInfo = (PropertyInfo)memInfo;
-                memberType = propInfo.PropertyType;
-
-#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
-                setter = ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
-#else
-                if (propInfo.CanWrite)
-                {
-                    setter = ((object injectable, object value) => propInfo.SetValue(injectable, value, null));
-                }
-                else
-                {
-                    setter = GetOnlyPropertySetter(parentType, propInfo.Name);
-                }
+#if ZEN_INTERNAL_PROFILING
+            using (ProfileTimers.CreateTimedBlock("Type Analysis - Direct Reflection"))
 #endif
+            {
+                return CreateTypeInfoFromReflection(type);
             }
-
-            return new InjectableInfo(
-                isOptional,
-                identifier,
-                memInfo.Name,
-                memberType,
-                parentType,
-                setter,
-                null,
-                sourceType);
         }
 
-        static ConstructorInfo GetInjectConstructor(Type parentType)
+        public static bool ShouldAnalyzeType(Type type)
         {
-            var constructors = parentType.Constructors();
-
-#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
-            // WP8 generates a dummy constructor with signature (internal Classname(UIntPtr dummy))
-            // So just ignore that
-            constructors = constructors.Where(c => !IsWp8GeneratedConstructor(c)).ToArray();
-#endif
-
-            if (constructors.IsEmpty())
+            if (type == null || type.IsEnum() || type.IsArray || type.IsInterface()
+                || type.ContainsGenericParameters() || IsStaticType(type)
+                || type == typeof(object))
             {
-                return null;
+                return false;
             }
 
-            if (constructors.HasMoreThan(1))
-            {
-                var explicitConstructor = (from c in constructors where c.HasAttribute<InjectAttribute>() select c).SingleOrDefault();
-
-                if (explicitConstructor != null)
-                {
-                    return explicitConstructor;
-                }
-
-                // If there is only one public constructor then use that
-                // This makes decent sense but is also necessary on WSA sometimes since the WSA generated
-                // constructor can sometimes be private with zero parameters
-                var singlePublicConstructor = constructors.Where(x => !x.IsPrivate).OnlyOrDefault();
-
-                if (singlePublicConstructor != null)
-                {
-                    return singlePublicConstructor;
-                }
-
-                return null;
-            }
-
-            return constructors[0];
+            return ShouldAnalyzeNamespace(type.Namespace);
         }
 
-#if UNITY_WSA && ENABLE_DOTNET && !UNITY_EDITOR
-        static bool IsWp8GeneratedConstructor(ConstructorInfo c)
+        static bool IsStaticType(Type type)
         {
-            ParameterInfo[] args = c.GetParameters();
-
-            if (args.Length == 1)
-            {
-                return args[0].ParameterType == typeof(UIntPtr)
-                    && (string.IsNullOrEmpty(args[0].Name) || args[0].Name == "dummy");
-            }
-
-            if (args.Length == 2)
-            {
-                return args[0].ParameterType == typeof(UIntPtr)
-                    && args[1].ParameterType == typeof(Int64*)
-                    && (string.IsNullOrEmpty(args[0].Name) || args[0].Name == "dummy")
-                    && (string.IsNullOrEmpty(args[1].Name) || args[1].Name == "dummy");
-            }
-
-            return false;
+            // Apparently this is unique to static classes
+            return type.IsAbstract() && type.IsSealed();
         }
-#endif
+
+        public static bool ShouldAnalyzeNamespace(string ns)
+        {
+            if (ns == null)
+            {
+                return true;
+            }
+
+            return ns != "System" && !ns.StartsWith("System.")
+                && ns != "UnityEngine" && !ns.StartsWith("UnityEngine.")
+                && ns != "UnityEditor" && !ns.StartsWith("UnityEditor.")
+                && ns != "UnityStandardAssets" && !ns.StartsWith("UnityStandardAssets.");
+        }
+
+        static InjectTypeInfo CreateTypeInfoFromReflection(Type type)
+        {
+            var reflectionInfo = ReflectionTypeAnalyzer.GetReflectionInfo(type);
+
+            var injectConstructor = ReflectionInfoTypeInfoConverter.ConvertConstructor(
+                reflectionInfo.InjectConstructor, type);
+
+            var injectMethods = reflectionInfo.InjectMethods.Select(
+                ReflectionInfoTypeInfoConverter.ConvertMethod).ToArray();
+
+            var memberInfos = reflectionInfo.InjectFields.Select(
+                x => ReflectionInfoTypeInfoConverter.ConvertField(type, x)).Concat(
+                    reflectionInfo.InjectProperties.Select(
+                        x => ReflectionInfoTypeInfoConverter.ConvertProperty(type, x))).ToArray();
+
+            return new InjectTypeInfo(
+                type, injectConstructor, injectMethods, memberInfos);
+        }
     }
 }

@@ -2,7 +2,7 @@ namespace Zenject
 {
     public interface IBindingFinalizer
     {
-        bool CopyIntoAllSubContainers
+        BindingInheritanceMethods BindingInheritanceMethod
         {
             get;
         }

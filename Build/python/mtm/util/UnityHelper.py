@@ -16,14 +16,15 @@ UnityLogFileLocation = os.getenv('localappdata') + '\\Unity\\Editor\\Editor.log'
 #UnityLogFileLocation = '{Modest3dDir}/Modest3DLog.txt'
 
 class Platforms:
-    Windows = 'Windows'
-    WebPlayer = 'WebPlayer'
-    Android = 'Android'
-    WebGl = 'WebGL'
-    OsX = 'OSX'
-    Linux = 'Linux'
-    Ios = 'iOS'
-    All = [Windows, WebPlayer, Android, WebGl, OsX, Linux, Ios]
+    Windows = 'windows'
+    WebPlayer = 'webplayer'
+    Android = 'android'
+    WebGl = 'webgl'
+    OsX = 'osx'
+    Linux = 'linux'
+    Ios = 'ios'
+    WindowsStoreApp = 'wsa'
+    All = [Windows, WebPlayer, Android, WebGl, OsX, Linux, Ios, WindowsStoreApp]
 
 class UnityReturnedErrorCodeException(Exception):
     pass
@@ -41,6 +42,9 @@ class UnityHelper:
 
     def onUnityLog(self, logStr):
         self._log.debug(logStr)
+
+    def openUnity(self, projectPath, platform):
+        self._sys.executeNoWait('"[UnityExePath]" -buildTarget {0} -projectPath "{1}"'.format(self._getBuildTargetArg(platform), projectPath))
 
     def runEditorFunction(self, projectPath, editorCommand, platform = Platforms.Windows, batchMode = True, quitAfter = True, extraExtraArgs = ''):
         extraArgs = ''
@@ -78,7 +82,10 @@ class UnityHelper:
         if platform == Platforms.Ios:
             return 'ios'
 
-        assertThat(False)
+        if platform == Platforms.WindowsStoreApp:
+            return 'wsa'
+
+        assertThat(False, "Unhandled platform {0}".format(platform))
 
     def runEditorFunctionRaw(self, projectPath, editorCommand, platform, extraArgs):
 

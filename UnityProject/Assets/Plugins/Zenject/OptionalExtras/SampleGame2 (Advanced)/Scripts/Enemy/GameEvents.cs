@@ -1,12 +1,10 @@
-using System;
-
 namespace Zenject.SpaceFighter
 {
-    public class PlayerDiedSignal : Signal<PlayerDiedSignal>
+    public struct PlayerDiedSignal
     {
     }
 
-    public class EnemyKilledSignal : Signal<EnemyKilledSignal>
+    public struct EnemyKilledSignal
     {
     }
 }

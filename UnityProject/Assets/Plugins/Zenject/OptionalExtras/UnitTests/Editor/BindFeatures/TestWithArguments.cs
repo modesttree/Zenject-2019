@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.BindFeatures
 {
@@ -16,25 +12,6 @@ namespace Zenject.Tests.BindFeatures
             Container.Bind<Foo>().AsTransient().WithArguments(3).NonLazy();
 
             Assert.IsEqual(Container.Resolve<Foo>().Value, 3);
-        }
-
-        [Test]
-        public void TestSingleSameArgument()
-        {
-            Container.Bind<IFoo>().To<Foo>().AsSingle().WithArguments(3).NonLazy();
-            Container.Bind<Foo>().AsSingle().WithArguments(3).NonLazy();
-
-            Assert.IsNotNull(Container.Resolve<IFoo>());
-            Assert.IsEqual(Container.Resolve<IFoo>(), Container.Resolve<Foo>());
-        }
-
-        [Test]
-        public void TestSingleDifferentArguments()
-        {
-            Container.Bind<IFoo>().To<Foo>().AsSingle().WithArguments(3);
-            Container.Bind<Foo>().AsSingle().WithArguments(2);
-
-            Assert.Throws(() => Container.FlushBindings());
         }
 
         [Test]

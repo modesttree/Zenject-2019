@@ -1,10 +1,7 @@
 #if !NOT_UNITY3D
 
 using System;
-using ModestTree;
 using UnityEngine;
-using System.Collections;
-using Zenject;
 
 namespace Zenject
 {
@@ -13,7 +10,7 @@ namespace Zenject
     public class ScriptableObjectInstallerBase : ScriptableObject, IInstaller
     {
         [Inject]
-        DiContainer _container = null;
+        DiContainer _container;
 
         protected DiContainer Container
         {

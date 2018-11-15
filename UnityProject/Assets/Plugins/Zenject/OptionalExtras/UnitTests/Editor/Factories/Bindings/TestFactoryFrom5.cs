@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Bindings
 {
@@ -42,7 +37,7 @@ namespace Zenject.Tests.Bindings
         {
         }
 
-        class IFooFactory : Factory<string, int, string, float, int, IFoo>
+        class IFooFactory : PlaceholderFactory<string, int, string, float, int, IFoo>
         {
         }
 
@@ -59,7 +54,7 @@ namespace Zenject.Tests.Bindings
                 private set;
             }
 
-            public class Factory : Factory<string, int, string, float, int, Foo>
+            public class Factory : PlaceholderFactory<string, int, string, float, int, Foo>
             {
             }
         }

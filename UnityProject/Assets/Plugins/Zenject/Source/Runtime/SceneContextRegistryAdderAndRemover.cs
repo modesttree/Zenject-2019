@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using UnityEngine.SceneManagement;
-using ModestTree;
 using System;
 
 namespace Zenject
@@ -28,6 +25,5 @@ namespace Zenject
             _registry.Remove(_sceneContext);
         }
     }
-
 }
 

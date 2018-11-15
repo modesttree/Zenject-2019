@@ -1,5 +1,4 @@
 using UnityEngine;
-using Zenject;
 
 namespace Zenject.Tests.Factories.BindFactoryOne
 {
@@ -18,7 +17,7 @@ namespace Zenject.Tests.Factories.BindFactoryOne
             private set;
         }
 
-        public class Factory : Factory<string, Bar>
+        public class Factory : PlaceholderFactory<string, Bar>
         {
         }
     }

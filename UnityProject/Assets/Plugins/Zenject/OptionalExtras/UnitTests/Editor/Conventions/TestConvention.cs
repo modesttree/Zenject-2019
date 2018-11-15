@@ -1,12 +1,10 @@
 #if !(UNITY_WSA && ENABLE_DOTNET)
 
-using System;
-using System.Collections.Generic;
-using Zenject;
-using NUnit.Framework;
 using System.Linq;
 using ModestTree;
-using Assert=ModestTree.Assert;
+using NUnit.Framework;
+using UnityEngine;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Convention
 {
@@ -45,7 +43,7 @@ namespace Zenject.Tests.Convention
         public void TestDerivingFromFail()
         {
             Container.Bind<IFoo>()
-                .To(x => x.AllTypes().DerivingFrom<IFoo>().FromAssemblyContaining<UnityEngine.Vector3>()).AsTransient();
+                .To(x => x.AllTypes().DerivingFrom<IFoo>().FromAssemblyContaining<Vector3>()).AsTransient();
 
             Assert.That(Container.ResolveAll<IFoo>().IsEmpty());
         }

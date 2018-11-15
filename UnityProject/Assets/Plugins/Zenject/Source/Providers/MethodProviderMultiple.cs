@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using ModestTree;
-using System.Linq;
-using ModestTree.Util;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class MethodProviderMultiple<TReturn> : IProvider
     {
         readonly DiContainer _container;
@@ -19,21 +18,33 @@ namespace Zenject
             _method = method;
         }
 
+        public bool IsCached
+        {
+            get { return false; }
+        }
+
+        public bool TypeVariesBasedOnMemberType
+        {
+            get { return false; }
+        }
+
         public Type GetInstanceType(InjectContext context)
         {
             return typeof(TReturn);
         }
 
-        public IEnumerator<List<object>> GetAllInstancesWithInjectSplit(InjectContext context, List<TypeValuePair> args)
+        public void GetAllInstancesWithInjectSplit(
+            InjectContext context, List<TypeValuePair> args, out Action injectAction, List<object> buffer)
         {
             Assert.IsEmpty(args);
             Assert.IsNotNull(context);
 
             Assert.That(typeof(TReturn).DerivesFromOrEqual(context.MemberType));
 
-            if (_container.IsValidating && !DiContainer.CanCreateOrInjectDuringValidation(context.MemberType))
+            injectAction = null;
+            if (_container.IsValidating && !TypeAnalyzer.ShouldAllowDuringValidation(context.MemberType))
             {
-                yield return new List<object>() { new ValidationMarker(typeof(TReturn)) };
+                buffer.Add(new ValidationMarker(typeof(TReturn)));
             }
             else
             {
@@ -42,11 +53,14 @@ namespace Zenject
                 if (result == null)
                 {
                     throw Assert.CreateException(
-                        "Method '{0}' returned null when list was expected. Object graph: {1}",
+                        "Method '{0}' returned null when list was expected. Object graph:\n {1}",
                         _method.ToDebugString(), context.GetObjectGraphString());
                 }
 
-                yield return result.Cast<object>().ToList();
+                foreach (var obj in result)
+                {
+                    buffer.Add(obj);
+                }
             }
         }
     }

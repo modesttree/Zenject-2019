@@ -9,135 +9,123 @@ using UnityEngine;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class FromBinderGeneric<TContract> : FromBinder
     {
         public FromBinderGeneric(
+            DiContainer bindContainer,
             BindInfo bindInfo,
-            BindFinalizerWrapper finalizerWrapper)
-            : base(bindInfo, finalizerWrapper)
+            BindStatement bindStatement)
+            : base(bindContainer, bindInfo, bindStatement)
         {
             BindingUtil.AssertIsDerivedFromTypes(typeof(TContract), BindInfo.ContractTypes);
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromFactory<TFactory>()
+        // Shortcut for FromIFactory and also for backwards compatibility
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromFactory<TFactory>()
             where TFactory : IFactory<TContract>
         {
-            return FromFactoryBase<TContract, TFactory>();
+            return FromIFactory(x => x.To<TFactory>().AsCached());
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromMethod(Func<InjectContext, TContract> method)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromIFactory(
+            Action<ConcreteBinderGeneric<IFactory<TContract>>> factoryBindGenerator)
+        {
+            return FromIFactoryBase<TContract>(factoryBindGenerator);
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromMethod(Func<TContract> method)
+        {
+            return FromMethodBase<TContract>(ctx => method());
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromMethod(Func<InjectContext, TContract> method)
         {
             return FromMethodBase<TContract>(method);
         }
 
-        public ScopeArgConditionCopyNonLazyBinder FromMethodMultiple(Func<InjectContext, IEnumerable<TContract>> method)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromMethodMultiple(Func<InjectContext, IEnumerable<TContract>> method)
         {
+            BindingUtil.AssertIsDerivedFromTypes(typeof(TContract), AllParentTypes);
             return FromMethodMultipleBase<TContract>(method);
         }
 
-        public ScopeConditionCopyNonLazyBinder FromResolveGetter<TObj>(Func<TObj, TContract> method)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveGetter<TObj>(Func<TObj, TContract> method)
         {
             return FromResolveGetter<TObj>(null, method);
         }
 
-        public ScopeConditionCopyNonLazyBinder FromResolveGetter<TObj>(object identifier, Func<TObj, TContract> method)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveGetter<TObj>(object identifier, Func<TObj, TContract> method)
         {
-            return FromResolveGetterBase<TObj, TContract>(identifier, method);
+            return FromResolveGetter<TObj>(identifier, method, InjectSources.Any);
         }
 
-        public ScopeConditionCopyNonLazyBinder FromInstance(TContract instance)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveGetter<TObj>(object identifier, Func<TObj, TContract> method, InjectSources source)
+        {
+            return FromResolveGetterBase<TObj, TContract>(identifier, method, source, false);
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveAllGetter<TObj>(Func<TObj, TContract> method)
+        {
+            return FromResolveAllGetter<TObj>(null, method);
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveAllGetter<TObj>(object identifier, Func<TObj, TContract> method)
+        {
+            return FromResolveAllGetter<TObj>(identifier, method, InjectSources.Any);
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromResolveAllGetter<TObj>(object identifier, Func<TObj, TContract> method, InjectSources source)
+        {
+            return FromResolveGetterBase<TObj, TContract>(identifier, method, source, true);
+        }
+
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromInstance(TContract instance)
         {
             return FromInstanceBase(instance);
         }
 
 #if !NOT_UNITY3D
 
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(
-            Func<TContract, bool> predicate, bool includeInactive = false)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentsInChildren(
+            Func<TContract, bool> predicate, bool includeInactive = true)
         {
-            return FromComponentInChildren(false, predicate, includeInactive);
+            return FromComponentsInChildren(false, predicate, includeInactive);
         }
 
-
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInChildren(
-            bool excludeSelf = false, Func<TContract, bool> predicate = null, bool includeInactive = false)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentsInChildren(
+            bool excludeSelf = false, Func<TContract, bool> predicate = null, bool includeInactive = true)
         {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+            Func<Component, bool> subPredicate;
 
-            return FromMethodMultiple((ctx) => {
-                Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                Assert.IsNotNull(ctx.ObjectInstance);
+            if (predicate != null)
+            {
+                subPredicate = component => predicate((TContract)(object)component);
+            }
+            else
+            {
+                subPredicate = null;
+            }
 
-                var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInChildren<TContract>(includeInactive)
-                    .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-
-                if (excludeSelf)
-                {
-                    res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
-                }
-
-                if (predicate != null)
-                {
-                    res = res.Where(predicate);
-                }
-
-                return res;
-            });
+            return FromComponentsInChildrenBase(
+                excludeSelf, subPredicate, includeInactive);
         }
 
-
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInParents(bool excludeSelf = false, bool includeInactive = false)
+        public ScopeConcreteIdArgConditionCopyNonLazyBinder FromComponentsInHierarchy(
+            Func<TContract, bool> predicate = null, bool includeInactive = true)
         {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
+            Func<Component, bool> subPredicate;
 
-            return FromMethodMultiple((ctx) =>
-                {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
+            if (predicate != null)
+            {
+                subPredicate = component => predicate((TContract)(object)component);
+            }
+            else
+            {
+                subPredicate = null;
+            }
 
-                    var res = ((MonoBehaviour)ctx.ObjectInstance).GetComponentsInParent<TContract>(includeInactive)
-                        .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-
-                    if (excludeSelf)
-                    {
-                        res = res.Where(x => (x as Component).gameObject != (ctx.ObjectInstance as Component).gameObject);
-                    }
-
-                    return res;
-                });
-        }
-
-        public ScopeArgConditionCopyNonLazyBinder FromComponentSibling()
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
-
-            return FromMethodMultiple((ctx) =>
-                {
-                    Assert.That(ctx.ObjectType.DerivesFromOrEqual<MonoBehaviour>());
-                    Assert.IsNotNull(ctx.ObjectInstance);
-
-                    return ((MonoBehaviour)ctx.ObjectInstance).GetComponents<TContract>()
-                        .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-                });
-        }
-
-        public ScopeArgConditionCopyNonLazyBinder FromComponentInHierarchy(
-            Func<TContract, bool> predicate = null, bool includeInactive = false)
-        {
-            BindingUtil.AssertIsInterfaceOrComponent(AllParentTypes);
-
-            return FromMethodMultiple((ctx) => {
-                var res = ctx.Container.Resolve<Context>().GetRootGameObjects()
-                    .SelectMany(x => x.GetComponentsInChildren<TContract>(includeInactive))
-                    .Where(x => !ReferenceEquals(x, ctx.ObjectInstance));
-
-                if (predicate != null)
-                {
-                    res = res.Where(predicate);
-                }
-
-                return res;
-            });
+            return FromComponentsInHierarchyBase(subPredicate, includeInactive);
         }
 #endif
     }

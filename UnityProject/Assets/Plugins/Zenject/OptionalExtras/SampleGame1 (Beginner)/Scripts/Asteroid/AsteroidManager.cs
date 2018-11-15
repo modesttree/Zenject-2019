@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using System.Collections;
-using Zenject;
-using Random=UnityEngine.Random;
 using System.Linq;
 using ModestTree;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Zenject.Asteroids
 {
@@ -71,7 +69,7 @@ namespace Zenject.Asteroids
 
                 _cachedAttributes.Enqueue(new AsteroidAttributes {
                     SizePx = sizePx,
-                    InitialSpeed = speed,
+                    InitialSpeed = speed
                 });
 
                 speedTotal += speed;

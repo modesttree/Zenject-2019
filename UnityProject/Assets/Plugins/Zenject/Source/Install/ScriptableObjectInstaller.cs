@@ -1,6 +1,5 @@
 #if !NOT_UNITY3D
 
-using System;
 using ModestTree;
 using UnityEngine;
 
@@ -117,7 +116,7 @@ namespace Zenject
         public static string GetDefaultResourcePath<TInstaller>()
             where TInstaller : ScriptableObjectInstallerBase
         {
-            return "Installers/" + typeof(TInstaller).Name();
+            return "Installers/" + typeof(TInstaller).PrettyName();
         }
 
         public static TInstaller CreateInstaller<TInstaller>(

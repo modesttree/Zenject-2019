@@ -1,49 +1,97 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Injection
 {
     [TestFixture]
     public class TestConstructorInjection : ZenjectUnitTestFixture
     {
-        class Test1
+        [Test]
+        public void TestResolve()
+        {
+            Container.Bind<Foo>().AsSingle().NonLazy();
+            Container.Bind<Bar>().AsSingle().NonLazy();
+
+            Assert.IsNotNull(Container.Resolve<Foo>());
+        }
+
+        [Test]
+        public void TestInstantiate()
+        {
+            Container.Bind<Foo>().AsSingle();
+            Assert.IsNotNull(Container.Instantiate<Foo>(new object[] { new Bar() }));
+        }
+
+        [Test]
+        public void TestMultipleWithOneTagged()
+        {
+            Container.Bind<Bar>().AsSingle().NonLazy();
+            Container.Bind<Qux>().AsSingle().NonLazy();
+
+            Assert.IsNotNull(Container.Resolve<Qux>());
+        }
+
+        [Test]
+        public void TestMultipleChooseLeastArguments()
+        {
+            Container.Bind<Bar>().AsSingle().NonLazy();
+            Container.Bind<Gorp>().AsSingle().NonLazy();
+
+            var gorp = Container.Resolve<Gorp>();
+
+            Assert.IsEqual(gorp.ChosenConstructor, 1);
+        }
+
+        class Bar
         {
         }
 
-        class Test2
+        class Foo
         {
-            public Test1 val;
-
-            public Test2(Test1 val)
+            public Foo(Bar bar)
             {
-                this.val = val;
+                Bar = bar;
+            }
+
+            public Bar Bar
+            {
+                get; private set;
             }
         }
 
-        [Test]
-        public void TestCase1()
+        class Qux
         {
-            Container.Bind<Test2>().AsSingle().NonLazy();
-            Container.Bind<Test1>().AsSingle().NonLazy();
+            public Qux()
+            {
+            }
 
-            var test1 = Container.Resolve<Test2>();
-
-            Assert.That(test1.val != null);
+            [Inject]
+            public Qux(Bar val)
+            {
+            }
         }
 
-        [Test]
-        public void TestConstructByFactory()
+        class Gorp
         {
-            Container.Bind<Test2>().AsSingle();
+            public Gorp()
+            {
+                ChosenConstructor = 1;
+            }
 
-            var val = new Test1();
-            var test1 = Container.Instantiate<Test2>(new object[] { val });
+            public Gorp(Bar val)
+            {
+                ChosenConstructor = 2;
+            }
 
-            Assert.That(test1.val == val);
+            public Gorp(string p1, int p2)
+            {
+                ChosenConstructor = 3;
+            }
+
+            public int ChosenConstructor
+            {
+                get; private set;
+            }
         }
     }
 }

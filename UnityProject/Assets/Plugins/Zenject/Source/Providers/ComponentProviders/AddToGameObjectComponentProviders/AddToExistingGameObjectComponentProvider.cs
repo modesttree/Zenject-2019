@@ -7,14 +7,16 @@ using UnityEngine;
 
 namespace Zenject
 {
+    [NoReflectionBaking]
     public class AddToExistingGameObjectComponentProvider : AddToGameObjectComponentProviderBase
     {
         readonly GameObject _gameObject;
 
         public AddToExistingGameObjectComponentProvider(
             GameObject gameObject, DiContainer container, Type componentType,
-            object concreteIdentifier, List<TypeValuePair> extraArguments)
-            : base(container, componentType, concreteIdentifier, extraArguments)
+            IEnumerable<TypeValuePair> extraArguments, object concreteIdentifier,
+            Action<InjectContext, object> instantiateCallback)
+            : base(container, componentType, extraArguments, concreteIdentifier, instantiateCallback)
         {
             _gameObject = gameObject;
         }
@@ -33,14 +35,16 @@ namespace Zenject
         }
     }
 
+    [NoReflectionBaking]
     public class AddToExistingGameObjectComponentProviderGetter : AddToGameObjectComponentProviderBase
     {
         readonly Func<InjectContext, GameObject> _gameObjectGetter;
 
         public AddToExistingGameObjectComponentProviderGetter(
             Func<InjectContext, GameObject> gameObjectGetter, DiContainer container, Type componentType,
-            object concreteIdentifier, List<TypeValuePair> extraArguments)
-            : base(container, componentType, concreteIdentifier, extraArguments)
+            List<TypeValuePair> extraArguments, object concreteIdentifier,
+            Action<InjectContext, object> instantiateCallback)
+            : base(container, componentType, extraArguments, concreteIdentifier, instantiateCallback)
         {
             _gameObjectGetter = gameObjectGetter;
         }

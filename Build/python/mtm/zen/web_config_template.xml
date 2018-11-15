@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+<system.webServer>
+<staticContent>
+<remove fileExtension=".unityweb" />
+<mimeMap fileExtension=".unityweb" mimeType="application/octet-stream" />
+</staticContent>
+</system.webServer>
+</configuration>

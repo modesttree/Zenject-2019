@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using Zenject;
 using NUnit.Framework;
-using System.Linq;
-using ModestTree;
-using Assert=ModestTree.Assert;
+using Assert = ModestTree.Assert;
 
 namespace Zenject.Tests.Injection
 {
@@ -25,10 +20,10 @@ namespace Zenject.Tests.Injection
         [Test]
         public void TestCaseDuplicateInjection()
         {
-            Container.Bind<Test0>().AsSingle().NonLazy();
-            Container.Bind<Test0>().AsSingle().NonLazy();
+            Container.Bind<Test0>().AsCached();
+            Container.Bind<Test0>().AsCached();
 
-            Container.Bind<Test1>().AsSingle().NonLazy();
+            Container.Bind<Test1>().AsSingle();
 
             Assert.Throws(
                 delegate { Container.Resolve<Test1>(); });

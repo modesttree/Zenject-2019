@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ModestTree;
 
@@ -18,10 +19,10 @@ namespace Zenject
             // Output the entire object graph to file
             var graph = CalculateObjectGraph(container, contractTypes);
 
-            var ignoreTypes = new List<Type>()
+            var ignoreTypes = new List<Type>
             {
                 typeof(DiContainer),
-                typeof(InitializableManager),
+                typeof(InitializableManager)
             };
 
             ignoreTypes.AddRange(externalIgnoreTypes);
@@ -50,7 +51,7 @@ namespace Zenject
 
             resultStr += " }";
 
-            System.IO.File.WriteAllText(outputPath, resultStr);
+            File.WriteAllText(outputPath, resultStr);
         }
 
         static bool ShouldIgnoreType(Type type, List<Type> ignoreTypes)
@@ -110,7 +111,7 @@ namespace Zenject
 
         static string GetFormattedTypeName(Type type)
         {
-            var str = type.Name();
+            var str = type.PrettyName();
 
             // GraphViz does not read names with <, >, or . characters so replace them
             str = str.Replace(">", "_");

@@ -1,7 +1,5 @@
 using System;
 using UnityEngine;
-using System.Collections;
-using Zenject;
 
 namespace Zenject.Asteroids
 {
@@ -40,7 +38,7 @@ namespace Zenject.Asteroids
             public float Frequency;
         }
 
-        public class Factory : Factory<ShipStateWaitingToStart>
+        public class Factory : PlaceholderFactory<ShipStateWaitingToStart>
         {
         }
     }

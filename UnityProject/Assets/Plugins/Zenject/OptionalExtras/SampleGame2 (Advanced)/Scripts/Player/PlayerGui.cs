@@ -1,6 +1,5 @@
 using ModestTree;
 using UnityEngine;
-using Zenject;
 
 #pragma warning disable 649
 
@@ -41,14 +40,14 @@ namespace Zenject.SpaceFighter
         int _killCount;
 
         [Inject]
-        public void Construct(Player player, EnemyKilledSignal enemyKilledSignal)
+        public void Construct(Player player, SignalBus signalBus)
         {
             _player = player;
 
             _textureForeground = CreateColorTexture(_foregroundColor);
             _textureBackground = CreateColorTexture(_backgroundColor);
 
-            enemyKilledSignal += OnEnemyKilled;
+            signalBus.Subscribe<EnemyKilledSignal>(OnEnemyKilled);
         }
 
         void OnEnemyKilled()
