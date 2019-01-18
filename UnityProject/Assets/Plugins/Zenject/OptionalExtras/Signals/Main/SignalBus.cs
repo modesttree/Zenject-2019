@@ -74,13 +74,18 @@ namespace Zenject
             }
         }
 
+
         public void Fire<TSignal>(object identifier = null)
+        {
+            Fire((TSignal)Activator.CreateInstance(typeof(TSignal)), identifier);
+        }
+
+        public void Fire<TSignal>(TSignal signal, object identifier = null)
         {
             // Do this before creating the signal so that it throws if the signal was not declared
             var declaration = GetDeclaration(typeof(TSignal), identifier, true);
 
-            declaration.Fire(
-                (TSignal)Activator.CreateInstance(typeof(TSignal)));
+            declaration.Fire(signal);
         }
 
         public void Fire(object signal, object identifier = null)
@@ -90,11 +95,15 @@ namespace Zenject
 
         public void TryFire<TSignal>(object identifier = null)
         {
+            TryFire((TSignal)Activator.CreateInstance(typeof(TSignal)), identifier);
+        }
+
+        public void TryFire<TSignal>(TSignal signal, object identifier = null)
+        {
             var declaration = GetDeclaration(typeof(TSignal), identifier, false);
             if (declaration != null)
             {
-                declaration.Fire(
-                    (TSignal)Activator.CreateInstance(typeof(TSignal)));
+                declaration.Fire(signal);
             }
         }
 
