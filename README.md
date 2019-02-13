@@ -879,7 +879,7 @@ Where:
         ```csharp
         Container.Bind<Foo>().FromSubContainerResolve().ByNewPrefabResourceInstaller<FooInstaller>("Path/To/MyPrefab");
 
-        class FooInstaller : MonoInstaller
+        class FooInstaller : Installer<FooInstaller>
         {
             public override void InstallBindings()
             {
