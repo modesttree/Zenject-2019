@@ -34,37 +34,12 @@ namespace Zenject
             _sceneContainer = sceneRoot == null ? null : sceneRoot.Container;
         }
 
-        public void LoadScene(string sceneName)
-        {
-            LoadScene(sceneName, LoadSceneMode.Single);
-        }
-
-        public void LoadScene(string sceneName, LoadSceneMode loadMode)
-        {
-            LoadScene(sceneName, loadMode, null);
-        }
-
-        public void LoadScene(
-            string sceneName, LoadSceneMode loadMode, Action<DiContainer> extraBindings)
-        {
-            LoadScene(sceneName, loadMode, extraBindings, LoadSceneRelationship.None);
-        }
-
         public void LoadScene(
             string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode)
-        {
-            LoadScene(sceneName, loadMode, extraBindings, containerMode, null);
-        }
-
-        public void LoadScene(
-            string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode,
-            Action<DiContainer> extraBindingsLate)
+            LoadSceneMode loadMode = LoadSceneMode.Single,
+            Action<DiContainer> extraBindings = null,
+            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+            Action<DiContainer> extraBindingsLate = null)
         {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
