@@ -9,12 +9,12 @@ using Zenject;
 
 namespace Zenject.MemoryPoolMonitor
 {
-    public class MpmView : IGuiRenderable, ITickable, IInitializable
+    public class MpmView : IGuiRenderable, IInitializable
     {
         readonly Settings _settings;
         readonly MpmWindow _window;
 
-        readonly List<IMemoryPool> _pools = new List<IMemoryPool>();
+        readonly List<WeakReference<IMemoryPool>> _pools = new List<WeakReference<IMemoryPool>>();
 
         const int NumColumns = 6;
 
@@ -151,20 +151,7 @@ namespace Zenject.MemoryPoolMonitor
             _poolListDirty = true;
         }
 
-        public void Tick()
-        {
-            if (_poolListDirty)
-            {
-                _poolListDirty = false;
-
-                _pools.Clear();
-                _pools.AddRange(StaticMemoryPoolRegistry.Pools.Where(ShouldIncludePool));
-            }
-
-            InPlaceStableSort<IMemoryPool>.Sort(_pools, ComparePools);
-        }
-
-        bool ShouldIncludePool(IMemoryPool pool)
+        bool ShouldIncludePool(WeakReference<IMemoryPool> poolRef)
         {
             //var poolType = pool.GetType();
 
@@ -172,6 +159,12 @@ namespace Zenject.MemoryPoolMonitor
             //{
                 //return false;
             //}
+
+            IMemoryPool pool;
+            if (!poolRef.TryGetTarget(out pool))
+            {
+                return false;
+            }
 
             if (_actualFilter.IsEmpty())
             {
@@ -183,6 +176,26 @@ namespace Zenject.MemoryPoolMonitor
 
         public void GuiRender()
         {
+            if (_poolListDirty)
+            {
+                _poolListDirty = false;
+
+                _pools.Clear();
+                _pools.AddRange(StaticMemoryPoolRegistry.Pools.Where(ShouldIncludePool));
+                InPlaceStableSort<WeakReference<IMemoryPool>>.Sort(_pools, ComparePools);
+            }
+            else
+            {
+                for (int i = _pools.Count - 1; i >= 0; i--)
+                {
+                    IMemoryPool pool;
+                    if (!_pools[i].TryGetTarget(out pool))
+                    {
+                        _pools.RemoveAt(i);
+                    }
+                }
+            }
+
             _controlID = GUIUtility.GetControlID(FocusType.Passive);
 
             Rect windowBounds = new Rect(0, 0, TotalWidth, _window.position.height);
@@ -293,7 +306,12 @@ namespace Zenject.MemoryPoolMonitor
 
             for (int i = 0; i < _pools.Count; i++)
             {
-                var pool = _pools[i];
+                var poolRef = _pools[i];
+                IMemoryPool pool;
+                if (!poolRef.TryGetTarget(out pool))
+                {
+                    continue;
+                }
 
                 var rowRect = GetPoolRowRect(i);
                 rowRect.y += HeaderTop;
@@ -319,12 +337,13 @@ namespace Zenject.MemoryPoolMonitor
 
             for (int i = 0; i < _pools.Count; i++)
             {
-                var pool = _pools[i];
+                var poolRef = _pools[i];
                 var rowRect = GetPoolRowRect(i);
+                IMemoryPool pool;
 
                 Texture2D background;
 
-                if (pool.GetType() == _selectedPoolType)
+                if (poolRef.TryGetTarget(out pool) && pool.GetType() == _selectedPoolType)
                 {
                     background = RowBackgroundSelected;
                 }
@@ -391,21 +410,27 @@ namespace Zenject.MemoryPoolMonitor
             {
                 for (int i = 0; i < _pools.Count; i++)
                 {
-                    var pool = _pools[i];
+                    var poolRef = _pools[i];
 
                     var cellBounds = new Rect(
                         0, _settings.RowHeight * i,
                         columnBounds.width, _settings.RowHeight);
 
-                    DrawColumnContents(index, cellBounds, pool);
+                    DrawColumnContents(index, cellBounds, poolRef);
                 }
             }
             GUI.EndGroup();
         }
 
         void DrawColumnContents(
-            int index, Rect bounds, IMemoryPool pool)
+            int index, Rect bounds, WeakReference<IMemoryPool> poolRef)
         {
+            IMemoryPool pool;
+            if (!poolRef.TryGetTarget(out pool))
+            {
+                return;
+            }
+
             switch (index)
             {
                 case 0:
@@ -482,11 +507,20 @@ namespace Zenject.MemoryPoolMonitor
                 {
                     _sortColumn = index;
                 }
+                _poolListDirty = true;
             }
         }
 
-        int ComparePools(IMemoryPool left, IMemoryPool right)
+        int ComparePools(WeakReference<IMemoryPool> leftRef, WeakReference<IMemoryPool> rightRef)
         {
+            IMemoryPool left, right;
+            bool hasLeft = leftRef.TryGetTarget(out left);
+            bool hasRight = rightRef.TryGetTarget(out right);
+            if (!hasLeft || !hasRight)
+            {
+                return hasLeft.CompareTo(hasRight);
+            }
+
             if (_sortDescending)
             {
                 var temp = right;
