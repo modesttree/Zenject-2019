@@ -157,7 +157,7 @@ namespace Zenject
 #if ZEN_SIGNALS_ADD_UNIRX
         public IObservable<TSignal> GetStreamId<TSignal>(object identifier)
         {
-            return GetStream(typeof(TSignal), identifier).Select(x => (TSignal)x);
+            return GetStreamId(typeof(TSignal), identifier).Select(x => (TSignal)x);
         }
 
         public IObservable<TSignal> GetStream<TSignal>()
