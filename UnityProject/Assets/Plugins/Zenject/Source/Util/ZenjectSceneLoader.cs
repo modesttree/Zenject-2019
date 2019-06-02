@@ -34,37 +34,12 @@ namespace Zenject
             _sceneContainer = sceneRoot == null ? null : sceneRoot.Container;
         }
 
-        public void LoadScene(string sceneName)
-        {
-            LoadScene(sceneName, LoadSceneMode.Single);
-        }
-
-        public void LoadScene(string sceneName, LoadSceneMode loadMode)
-        {
-            LoadScene(sceneName, loadMode, null);
-        }
-
-        public void LoadScene(
-            string sceneName, LoadSceneMode loadMode, Action<DiContainer> extraBindings)
-        {
-            LoadScene(sceneName, loadMode, extraBindings, LoadSceneRelationship.None);
-        }
-
         public void LoadScene(
             string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode)
-        {
-            LoadScene(sceneName, loadMode, extraBindings, containerMode, null);
-        }
-
-        public void LoadScene(
-            string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode,
-            Action<DiContainer> extraBindingsLate)
+            LoadSceneMode loadMode = LoadSceneMode.Single,
+            Action<DiContainer> extraBindings = null,
+            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+            Action<DiContainer> extraBindingsLate = null)
         {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
@@ -78,38 +53,12 @@ namespace Zenject
             // we can't do that in this case since the scene isn't loaded until the next frame
         }
 
-        public AsyncOperation LoadSceneAsync(string sceneName)
-        {
-            return LoadSceneAsync(sceneName, LoadSceneMode.Single);
-        }
-
-        public AsyncOperation LoadSceneAsync(string sceneName, LoadSceneMode loadMode)
-        {
-            return LoadSceneAsync(sceneName, loadMode, null);
-        }
-
-        public AsyncOperation LoadSceneAsync(
-            string sceneName, LoadSceneMode loadMode, Action<DiContainer> extraBindings)
-        {
-            return LoadSceneAsync(sceneName, loadMode, extraBindings, LoadSceneRelationship.None);
-        }
-
-        public AsyncOperation LoadSceneAsync(
+            public AsyncOperation LoadSceneAsync(
             string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode)
-        {
-            return LoadSceneAsync(
-                sceneName, loadMode, extraBindings, containerMode, null);
-        }
-
-        public AsyncOperation LoadSceneAsync(
-            string sceneName,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode,
-            Action<DiContainer> extraBindingsLate)
+            LoadSceneMode loadMode = LoadSceneMode.Single,
+            Action<DiContainer> extraBindings = null,
+            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+            Action<DiContainer> extraBindingsLate = null)
         {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
@@ -163,37 +112,12 @@ namespace Zenject
             SceneContext.ExtraBindingsLateInstallMethod = extraBindingsLate;
         }
 
-        public void LoadScene(int sceneIndex)
-        {
-            LoadScene(sceneIndex, LoadSceneMode.Single);
-        }
-
-        public void LoadScene(int sceneIndex, LoadSceneMode loadMode)
-        {
-            LoadScene(sceneIndex, loadMode, null);
-        }
-
-        public void LoadScene(
-            int sceneIndex, LoadSceneMode loadMode, Action<DiContainer> extraBindings)
-        {
-            LoadScene(sceneIndex, loadMode, extraBindings, LoadSceneRelationship.None);
-        }
-
         public void LoadScene(
             int sceneIndex,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode)
-        {
-            LoadScene(sceneIndex, loadMode, extraBindings, containerMode, null);
-        }
-
-        public void LoadScene(
-            int sceneIndex,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode,
-            Action<DiContainer> extraBindingsLate)
+            LoadSceneMode loadMode = LoadSceneMode.Single,
+            Action<DiContainer> extraBindings = null,
+            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+            Action<DiContainer> extraBindingsLate = null)
         {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
@@ -207,38 +131,12 @@ namespace Zenject
             // we can't do that in this case since the scene isn't loaded until the next frame
         }
 
-        public AsyncOperation LoadSceneAsync(int sceneIndex)
-        {
-            return LoadSceneAsync(sceneIndex, LoadSceneMode.Single);
-        }
-
-        public AsyncOperation LoadSceneAsync(int sceneIndex, LoadSceneMode loadMode)
-        {
-            return LoadSceneAsync(sceneIndex, loadMode, null);
-        }
-
-        public AsyncOperation LoadSceneAsync(
-            int sceneIndex, LoadSceneMode loadMode, Action<DiContainer> extraBindings)
-        {
-            return LoadSceneAsync(sceneIndex, loadMode, extraBindings, LoadSceneRelationship.None);
-        }
-
         public AsyncOperation LoadSceneAsync(
             int sceneIndex,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode)
-        {
-            return LoadSceneAsync(
-                sceneIndex, loadMode, extraBindings, containerMode, null);
-        }
-
-        public AsyncOperation LoadSceneAsync(
-            int sceneIndex,
-            LoadSceneMode loadMode,
-            Action<DiContainer> extraBindings,
-            LoadSceneRelationship containerMode,
-            Action<DiContainer> extraBindingsLate)
+            LoadSceneMode loadMode = LoadSceneMode.Single,
+            Action<DiContainer> extraBindings = null,
+            LoadSceneRelationship containerMode = LoadSceneRelationship.None,
+            Action<DiContainer> extraBindingsLate = null)
         {
             PrepareForLoadScene(loadMode, extraBindings, extraBindingsLate, containerMode);
 
