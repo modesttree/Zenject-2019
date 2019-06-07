@@ -216,15 +216,33 @@ namespace Zenject
 
         public static bool ShouldSkipTypeAnalysis(Type type)
         {
-            return type == null || type.IsEnum() || type.IsArray || type.IsInterface()
+            if (type == null || type.IsEnum() || type.IsArray || type.IsInterface()
                 || type.ContainsGenericParameters() || IsStaticType(type)
-                || type == typeof(object);
+                || type == typeof(object))
+            {
+                return true;
+            }
+
+            return !ShouldAnalyzeNamespace(type.Namespace);
         }
 
         static bool IsStaticType(Type type)
         {
             // Apparently this is unique to static classes
             return type.IsAbstract() && type.IsSealed();
+        }
+
+        public static bool ShouldAnalyzeNamespace(string ns)
+        {
+            if (ns == null)
+            {
+                return true;
+            }
+
+            return ns != "System" && !ns.StartsWith("System.")
+                && ns != "UnityEngine" && !ns.StartsWith("UnityEngine.")
+                && ns != "UnityEditor" && !ns.StartsWith("UnityEditor.")
+                && ns != "UnityStandardAssets" && !ns.StartsWith("UnityStandardAssets.");
         }
 
         static InjectTypeInfo CreateTypeInfoFromReflection(Type type)
