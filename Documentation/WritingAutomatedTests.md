@@ -42,7 +42,7 @@ public class Logger
 To test the class do the following:
 - Open up Unity's Test Runner by clicking Window -> General -> Test Runner
 - Underneath the EditMode tab click "Create EditMode Test Assembly Folder". This will create a folder that contains the necessary asmdef file that is needed to get access to the Nunit namespace.
-- Select the newly created asmdef file and add a reference to Zenject-TestFramework
+- Select the newly created asmdef file and add a reference to Zenject-TestFramework in the Unity inspector (Tests Import Settings -> Assembly Definition References)
 - Right click inside the folder in the Project tab and select `Create -> Zenject -> Unit Test`.  Name it `TestLogger`.cs.  This will create a basic template that we can fill in with our tests
 - Copy and paste the following:
 
