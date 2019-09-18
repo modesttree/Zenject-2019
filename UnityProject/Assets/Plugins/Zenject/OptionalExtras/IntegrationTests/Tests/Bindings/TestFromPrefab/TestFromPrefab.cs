@@ -193,6 +193,25 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator TestIsActiveSelf()
+        {
+            PreInstall();
+
+            Container.Bind<Foo>().FromComponentInNewPrefab(FooPrefab)
+                                 .IsActiveSelf(false)
+                                 .AsSingle()
+                                 .NonLazy();
+
+            var activeSelf = Container.Resolve<Foo>().gameObject.activeSelf;
+
+            PostInstall();
+
+            Assert.That(!activeSelf, "activeSelf should be false");
+
+            yield break;
+        }
+
         GameObject GetPrefab(string name)
         {
             return FixtureUtil.GetPrefab("TestFromPrefab/{0}".Fmt(name));

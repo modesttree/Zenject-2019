@@ -187,6 +187,25 @@ namespace Zenject.Tests.Bindings
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator TestIsActiveSelf()
+        {
+            PreInstall();
+
+            Container.Bind<Foo>().FromNewComponentOnNewGameObject()
+                                 .IsActiveSelf(false)
+                                 .AsSingle()
+                                 .NonLazy();
+
+            var activeSelf = Container.Resolve<Foo>().gameObject.activeSelf;
+
+            PostInstall();
+
+            Assert.That(!activeSelf, "activeSelf should be false");
+
+            yield break;
+        }
+
         public interface IBar
         {
         }

@@ -1692,7 +1692,7 @@ namespace Zenject
 
             var prefabWasActive = prefabAsGameObject.activeSelf;
 
-            shouldMakeActive = prefabWasActive;
+            shouldMakeActive = gameObjectBindInfo.IsActiveSelf ?? prefabWasActive;
 
             var parent = GetTransformGroup(gameObjectBindInfo, context);
 
@@ -1797,6 +1797,11 @@ namespace Zenject
             FlushBindings();
 
             var gameObj = new GameObject(gameObjectBindInfo.Name ?? "GameObject");
+            if (gameObjectBindInfo.IsActiveSelf.HasValue)
+            {
+                gameObj.SetActive(gameObjectBindInfo.IsActiveSelf.Value);
+            }
+
             var parent = GetTransformGroup(gameObjectBindInfo, context);
 
             if (parent == null)
