@@ -44,6 +44,12 @@ namespace Zenject
             set;
         }
 
+        public bool? IsActiveSelf
+        {
+            get;
+            set;
+        }
+
         public static readonly GameObjectCreationParameters Default = new GameObjectCreationParameters();
 
         public override int GetHashCode()
@@ -57,6 +63,7 @@ namespace Zenject
                 hash = hash * 29 + (ParentTransformGetter == null ? 0 : ParentTransformGetter.GetHashCode());
                 hash = hash * 29 + (!Position.HasValue ? 0 : Position.Value.GetHashCode());
                 hash = hash * 29 + (!Rotation.HasValue ? 0 : Rotation.Value.GetHashCode());
+                hash = hash * 29 + (!IsActiveSelf.HasValue ? 0 : IsActiveSelf.Value.GetHashCode());
                 return hash;
             }
         }

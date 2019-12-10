@@ -883,6 +883,15 @@ namespace Zenject
             }
         }
 
+        public Type TryResolveType(Type type)
+        {
+            using (var context = ZenPools.SpawnInjectContext(this, type))
+            {
+                context.Optional = true;
+                return ResolveType(context);
+            }
+        }
+
         // Returns the concrete type that would be returned with Resolve(context)
         // without actually instantiating it
         // This is safe to use within installers
@@ -896,6 +905,11 @@ namespace Zenject
 
             if (providerInfo == null)
             {
+                if (context.Optional)
+                {
+                    return null;
+                }
+
                 throw Assert.CreateException(
                     "Unable to resolve {0}{1}. Object graph:\n{2}", context.BindingId,
                     (context.ObjectType == null ? "" : " while building object with type '{0}'".Fmt(context.ObjectType)),
@@ -1692,7 +1706,7 @@ namespace Zenject
 
             var prefabWasActive = prefabAsGameObject.activeSelf;
 
-            shouldMakeActive = prefabWasActive;
+            shouldMakeActive = gameObjectBindInfo.IsActiveSelf ?? prefabWasActive;
 
             var parent = GetTransformGroup(gameObjectBindInfo, context);
 
@@ -1797,6 +1811,11 @@ namespace Zenject
             FlushBindings();
 
             var gameObj = new GameObject(gameObjectBindInfo.Name ?? "GameObject");
+            if (gameObjectBindInfo.IsActiveSelf.HasValue)
+            {
+                gameObj.SetActive(gameObjectBindInfo.IsActiveSelf.Value);
+            }
+
             var parent = GetTransformGroup(gameObjectBindInfo, context);
 
             if (parent == null)
