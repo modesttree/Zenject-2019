@@ -6,9 +6,10 @@
     "optionalUnityReferences": [
         "TestAssemblies"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
 }
