@@ -428,7 +428,7 @@ public class Foo
     Qux _qux;
 
     [Inject]
-    public Init(IBar bar, Qux qux)
+    public void Init(IBar bar, Qux qux)
     {
         _bar = bar;
         _qux = qux;
